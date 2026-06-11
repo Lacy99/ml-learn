@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทที่ 10: Inductive Learning & Decision Trees</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        }
+    </style>
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <span class="text-sm font-semibold bg-white/20 py-1 px-3 rounded-full">บทที่ 10</span>
+            <h1 class="text-3xl md:text-4xl font-bold mt-3">Inductive Learning & Decision Tree Learning</h1>
+            <p class="mt-2 text-sky-100">การเรียนรู้แบบอุปนัยและการเรียนรู้ด้วยต้นไม้ตัดสินใจ</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Section 1: Inductive Learning -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-sky-800 mb-4 border-b-2 border-sky-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center mr-3 font-semibold text-lg">1</span>
+                การเรียนรู้แบบอุปนัย (Inductive Learning)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>การเรียนรู้แบบอุปนัย (Inductive Learning)</strong> คือกระบวนการที่สร้างข้อสรุปหรือ "กฎทั่วไป" (General Rules) จากตัวอย่างเฉพาะเจาะจง (Specific Examples) ที่เป็นข้อมูลฝึกสอน (Training Data) เพื่อทำนายหรือประเมินลักษณะข้อมูลตัวใหม่ในอนาคตได้อย่างถูกต้อง
+            </p>
+            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-sky-500 mb-4">
+                <h3 class="font-bold text-slate-800 mb-2">สมมติฐานการเรียนรู้แบบอุปนัย (Inductive Learning Hypothesis)</h3>
+                <p class="text-slate-600 text-sm">
+                    "สมมติฐานใดๆ ที่ทำงานได้ดีและแม่นยำกับข้อมูลฝึกสอนขนาดใหญ่เพียงพอ สมมติฐานนั้นย่อมมีแนวโน้มที่จะทำงานได้ดีกับข้อมูลตัวอย่างใหม่ๆ ในอนาคตเช่นกัน"
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 2: Decision Tree Learning -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-sky-800 mb-4 border-b-2 border-sky-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center mr-3 font-semibold text-lg">2</span>
+                การเรียนรู้ต้นไม้ตัดสินใจ (Decision Tree Learning)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>ต้นไม้ตัดสินใจ (Decision Tree)</strong> เป็นโมเดลการจำแนกประเภท (Classification) และการทำนายค่า (Regression) ที่มีลักษณะคล้ายผังงาน (Flowchart) โดยโครงสร้างประกอบด้วย:
+            </p>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2 mb-6">
+                <li><strong>Root Node (โหนดราก):</strong> จุดเริ่มต้นของต้นไม้ตัดสินใจ ทำหน้าที่เลือกแอตทริบิวต์ที่ดีที่สุดในการจำแนกกลุ่มข้อมูล</li>
+                <li><strong>Internal Nodes (โหนดภายใน):</strong> แทนคำถามหรือเงื่อนไขในการทดสอบแอตทริบิวต์</li>
+                <li><strong>Branches (กิ่งก้าน):</strong> แทนผลลัพธ์หรือทิศทางตามเงื่อนไขที่ถูกทดสอบ</li>
+                <li><strong>Leaf Nodes (โหนดใบ):</strong> โหนดสุดท้ายที่บอกถึงประเภทข้อมูล (Class Label) หรือผลลัพธ์การตัดสินใจ</li>
+            </ul>
+
+            <div class="border border-slate-200 rounded-xl p-6 bg-slate-50 flex flex-col items-center mb-6">
+                <span class="text-xs font-semibold text-sky-600 bg-sky-100 px-2 py-1 rounded mb-4">ตัวอย่างโครงสร้างอย่างง่าย</span>
+                <!-- Text-based ASCII visual representation of a tree for clean display -->
+                <div class="font-mono text-sm text-slate-700 bg-slate-100 p-4 rounded-lg shadow-inner w-full max-w-sm text-center">
+                    <div>[ วันนี้ฝนตกหรือไม่? ] (Root)</div>
+                    <div class="my-2">├── ใช่ ──> [ พกร่มไปด้วย ] (Leaf)</div>
+                    <div>└── ไม่ใช่ ──> [ ไม่ต้องพกร่ม ] (Leaf)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Algorithm & Math -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-sky-800 mb-4 border-b-2 border-sky-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center mr-3 font-semibold text-lg">3</span>
+                ขั้นตอนวิธี ID3 และคณิตศาสตร์ที่เกี่ยวข้อง
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                อัลกอริทึม **ID3 (Iterative Dichotomiser 3)** ของ Ross Quinlan เป็นหนึ่งในอัลกอริทึมยอดนิยมในการสร้างต้นไม้ตัดสินใจ โดยอาศัยคณิตศาสตร์เชิงข้อมูล 2 เรื่องหลัก:
+            </p>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">1. เอนโทรปี (Entropy)</h3>
+            <p class="text-slate-600 mb-4 text-sm">
+                เอนโทรปีเป็นตัววัด "ความไม่เป็นระเบียบ" หรือความหลากหลายของข้อมูลในกลุ่มประชากร $S$ มีสูตรคำนวณดังนี้:
+            </p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-center items-center my-4 font-mono text-lg overflow-x-auto">
+                $$Entropy(S) = - \sum_{i=1}^{c} p_i \log_2(p_i)$$
+            </div>
+            <p class="text-slate-500 text-xs mb-6">
+                *โดยที่ $p_i$ คือสัดส่วนหรือค่าความน่าจะเป็นของคลาส $i$ ในเซตข้อมูล $S$*
+            </p>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">2. การรับรู้ข้อมูลเพิ่มขึ้น (Information Gain)</h3>
+            <p class="text-slate-600 mb-4 text-sm">
+                Information Gain คือค่าคะแนนความสะอาดของข้อมูลที่เพิ่มขึ้น เมื่อเรานำแอตทริบิวต์ $A$ มาใช้ในการแบ่งเซตข้อมูล $S$ คำนวณได้จาก:
+            </p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-center items-center my-4 font-mono text-lg overflow-x-auto">
+                $$Gain(S, A) = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_v|}{|S|} Entropy(S_v)$$
+            </div>
+            <p class="text-slate-500 text-xs mb-4">
+                *โดยที่ $Values(A)$ คือเซตของค่าที่เป็นไปได้ทั้งหมดในแอตทริบิวต์ $A$ และ $S_v$ คือเซตย่อย of $S$ ที่มีคุณสมบัติ $A = v$*
+            </p>
+            
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-xl text-yellow-800 text-sm">
+                <strong>กฎในการเลือกโหนด:</strong> อัลกอริทึมจะเลือกแอตทริบิวต์ที่ให้ค่า <strong>Information Gain สูงที่สุด</strong> ในตำแหน่งโหนดนั้นๆ เสมอ เพื่อลดความคลุมเครือให้เร็วที่สุด
+            </div>
+
+            <!-- Interactive Entropy Visualizer -->
+            <div class="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                <h3 class="font-bold text-sky-900 text-lg mb-4 text-center">🎯 เครื่องคำนวณค่าเอนโทรปีจำลอง (Interactive Entropy Calculator)</h3>
+                <p class="text-slate-600 text-sm text-center mb-6">ลองเลื่อนแถบเพื่อเปลี่ยนจำนวนตัวอย่างเชิงบวกและลบ แล้วสังเกตระดับความไม่ระเบียบ (Entropy) ของข้อมูล</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <!-- Sliders & Stats -->
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-1">
+                                <span>ตัวอย่างเชิงบวก (+) (Positive)</span>
+                                <span id="pos-val" class="text-sky-600">10</span>
+                            </div>
+                            <input type="range" id="pos-slider" min="0" max="50" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-1">
+                                <span>ตัวอย่างเชิงลบ (-) (Negative)</span>
+                                <span id="neg-val" class="text-rose-600">10</span>
+                            </div>
+                            <input type="range" id="neg-slider" min="0" max="50" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-xs text-slate-600 space-y-2">
+                            <div class="flex justify-between">
+                                <span>จำนวนตัวอย่างทั้งหมด ($|S|$):</span>
+                                <span id="total-val" class="font-bold text-slate-800">20</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>สัดส่วนข้อมูลบวก ($p_+$):</span>
+                                <span id="ppos-val" class="font-bold text-slate-800">0.50</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>สัดส่วนข้อมูลลบ ($p_-$):</span>
+                                <span id="pneg-val" class="font-bold text-slate-800">0.50</span>
+                            </div>
+                            <div class="border-t border-slate-100 pt-2 flex justify-between text-sm">
+                                <span class="font-semibold text-slate-700">ค่าเอนโทรปี (Entropy):</span>
+                                <span id="entropy-result" class="font-bold text-sky-700 text-lg">1.0000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SVG Chart Plot -->
+                    <div class="flex flex-col items-center">
+                        <svg id="entropy-chart" class="w-full max-w-[280px] h-[180px] bg-white border border-slate-200 rounded-xl p-4 shadow-sm" viewBox="0 0 100 60">
+                            <!-- X & Y Axes -->
+                            <line x1="10" y1="5" x2="10" y2="50" stroke="#94a3b8" stroke-width="0.5" />
+                            <line x1="10" y1="50" x2="95" y2="50" stroke="#94a3b8" stroke-width="0.5" />
+                            <!-- Axis Labels -->
+                            <text x="5" y="8" font-size="3" fill="#64748b" text-anchor="middle">H(S)</text>
+                            <text x="95" y="54" font-size="3" fill="#64748b" text-anchor="middle">p+</text>
+                            <text x="10" y="54" font-size="3" fill="#64748b" text-anchor="middle">0.0</text>
+                            <text x="52.5" y="54" font-size="3" fill="#64748b" text-anchor="middle">0.5</text>
+                            <text x="90" y="54" font-size="3" fill="#64748b" text-anchor="middle">1.0</text>
+                            
+                            <!-- Entropy Curve -->
+                            <path id="curve-path" d="" fill="none" stroke="#38bdf8" stroke-width="1" />
+                            <!-- Active Point -->
+                            <circle id="chart-point" cx="50" cy="10" r="2.5" fill="#0284c7" />
+                        </svg>
+                        <div id="purity-status" class="mt-3 text-xs font-bold px-3 py-1 rounded-full bg-sky-100 text-sky-800 transition-all duration-300">
+                            ปานกลาง / Mixed
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const posSlider = document.getElementById("pos-slider");
+                    const negSlider = document.getElementById("neg-slider");
+                    const posVal = document.getElementById("pos-val");
+                    const negVal = document.getElementById("neg-val");
+                    const totalVal = document.getElementById("total-val");
+                    const pposVal = document.getElementById("ppos-val");
+                    const pnegVal = document.getElementById("pneg-val");
+                    const entropyResult = document.getElementById("entropy-result");
+                    const chartPoint = document.getElementById("chart-point");
+                    const curvePath = document.getElementById("curve-path");
+                    const purityStatus = document.getElementById("purity-status");
+
+                    // 1. Draw SVG curve
+                    let pathD = "M 10 50 ";
+                    for(let x=0; x<=80; x++) {
+                        let p = x / 80;
+                        let h = 0;
+                        if(p > 0 && p < 1) {
+                            h = -p * Math.log2(p) - (1-p) * Math.log2(1-p);
+                        }
+                        let cx = 10 + x;
+                        let cy = 50 - (h * 40);
+                        pathD += `L ${cx} ${cy} `;
+                    }
+                    curvePath.setAttribute("d", pathD);
+
+                    function update() {
+                        const pos = parseInt(posSlider.value);
+                        const neg = parseInt(negSlider.value);
+                        posVal.textContent = pos;
+                        negVal.textContent = neg;
+
+                        const total = pos + neg;
+                        totalVal.textContent = total;
+
+                        if (total === 0) {
+                            pposVal.textContent = "0.00";
+                            pnegVal.textContent = "0.00";
+                            entropyResult.textContent = "0.0000";
+                            chartPoint.setAttribute("cx", 10);
+                            chartPoint.setAttribute("cy", 50);
+                            purityStatus.className = "mt-3 text-xs font-bold px-3 py-1 rounded-full bg-slate-100 text-slate-800";
+                            purityStatus.textContent = "ว่างเปล่า / Empty";
+                            return;
+                        }
+
+                        const pPos = pos / total;
+                        const pNeg = neg / total;
+                        pposVal.textContent = pPos.toFixed(2);
+                        pnegVal.textContent = pNeg.toFixed(2);
+
+                        let entropy = 0;
+                        if (pPos > 0 && pNeg > 0) {
+                            entropy = - (pPos * Math.log2(pPos)) - (pNeg * Math.log2(pNeg));
+                        }
+                        entropyResult.textContent = entropy.toFixed(4);
+
+                        // Move chart point
+                        const px = 10 + (pPos * 80);
+                        const py = 50 - (entropy * 40);
+                        chartPoint.setAttribute("cx", px);
+                        chartPoint.setAttribute("cy", py);
+
+                        // Update Status
+                        if (entropy === 0) {
+                            purityStatus.className = "mt-3 text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800";
+                            purityStatus.textContent = "สะอาดสมบูรณ์ / Pure";
+                        } else if (entropy > 0.9) {
+                            purityStatus.className = "mt-3 text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-800";
+                            purityStatus.textContent = "ข้อมูลปะปนกันสูง / Highly Chaotic";
+                        } else {
+                            purityStatus.className = "mt-3 text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800";
+                            purityStatus.textContent = "ปานกลาง / Mixed";
+                        }
+                    }
+
+                    posSlider.addEventListener("input", update);
+                    negSlider.addEventListener("input", update);
+                    update();
+                });
+            </script>
+        </section>
+
+        <!-- Section 4: Interactive Decision Tree Visualizer -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-sky-800 mb-4 border-b-2 border-sky-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center mr-3 font-semibold text-lg">4</span>
+                เครื่องสร้างต้นไม้ตัดสินใจจำลอง (Interactive Decision Tree Generator)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                ทดลองคลิกสลับค่าผลลัพธ์ **"เล่น (Yes)"** หรือ **"ไม่เล่น (No)"** ในตารางข้อมูลด้านซ้าย เพื่อดูอัลกอริทึมคำนวณหาจุดแบ่งและสแกนวาดโครงสร้างต้นไม้ตัดสินใจ (Decision Tree) ขึ้นมาใหม่แบบสด ๆ
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-6">
+                <!-- Left: Table -->
+                <div class="space-y-4">
+                    <span class="text-sm font-semibold text-slate-700 block">1. ตารางข้อมูลประวัติการทำกิจกรรม (6 แถว)</span>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-xs text-left text-slate-600">
+                            <thead class="text-slate-700 uppercase bg-slate-100 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th scope="col" class="px-3 py-2 text-center">ลำดับ</th>
+                                    <th scope="col" class="px-3 py-2">ท้องฟ้า (Outlook)</th>
+                                    <th scope="col" class="px-3 py-2">กระแสลม (Wind)</th>
+                                    <th scope="col" class="px-3 py-2 text-center">ผลลัพธ์ (Play)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dt-table-body">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Math Breakdown -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2 font-mono">
+                        <div class="font-bold text-slate-800 mb-1 text-center border-b pb-1">🧮 รายละเอียดการคิดคำนวณเบื้องหลัง</div>
+                        <div class="flex justify-between">
+                            <span>เอนโทรปีตั้งต้น H(S):</span>
+                            <span id="dt-entropy-parent" class="font-bold text-slate-800">0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Gain(S, ท้องฟ้า):</span>
+                            <span id="dt-gain-outlook" class="font-bold text-sky-700">0.00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Gain(S, ลม):</span>
+                            <span id="dt-gain-wind" class="font-bold text-sky-700">0.00</span>
+                        </div>
+                        <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-sky-800">
+                            <span>คุณลักษณะโหนดราก (Root):</span>
+                            <span id="dt-winner-attr">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: SVG Tree -->
+                <div class="flex flex-col items-center">
+                    <span class="text-sm font-semibold text-slate-700 block mb-2">2. โครงสร้างต้นไม้ที่ถูกสร้างแบบเรียลไทม์</span>
+                    <svg id="tree-svg" class="w-full max-w-[360px] h-[260px] bg-slate-900 border border-slate-700 rounded-2xl shadow-lg p-2" viewBox="0 0 320 240">
+                        <!-- Elements rendered by JS -->
+                    </svg>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const tableBody = document.getElementById("dt-table-body");
+                    const entropyParentDisp = document.getElementById("dt-entropy-parent");
+                    const gainOutlookDisp = document.getElementById("dt-gain-outlook");
+                    const gainWindDisp = document.getElementById("dt-gain-wind");
+                    const winnerAttrDisp = document.getElementById("dt-winner-attr");
+                    const treeSvg = document.getElementById("tree-svg");
+
+                    // Initial dataset (6 rows)
+                    let dataset = [
+                        { id: 1, outlook: 'Sunny', wind: 'Weak', play: true },
+                        { id: 2, outlook: 'Sunny', wind: 'Strong', play: false },
+                        { id: 3, outlook: 'Rainy', wind: 'Weak', play: true },
+                        { id: 4, outlook: 'Rainy', wind: 'Weak', play: true },
+                        { id: 5, outlook: 'Sunny', wind: 'Weak', play: true },
+                        { id: 6, outlook: 'Rainy', wind: 'Strong', play: false }
+                    ];
+
+                    function getEntropy(rows) {
+                        if (rows.length === 0) return 0;
+                        const yes = rows.filter(r => r.play).length;
+                        const no = rows.length - yes;
+                        const pYes = yes / rows.length;
+                        const pNo = no / rows.length;
+                        let ent = 0;
+                        if (pYes > 0) ent -= pYes * Math.log2(pYes);
+                        if (pNo > 0) ent -= pNo * Math.log2(pNo);
+                        return ent;
+                    }
+
+                    function getGain(rows, attr) {
+                        const parentEnt = getEntropy(rows);
+                        const vals = [...new Set(rows.map(r => r[attr]))];
+                        let childEntSum = 0;
+                        vals.forEach(val => {
+                            const sub = rows.filter(r => r[attr] === val);
+                            childEntSum += (sub.length / rows.length) * getEntropy(sub);
+                        });
+                        return parentEnt - childEntSum;
+                    }
+
+                    function populateTable() {
+                        tableBody.innerHTML = '';
+                        dataset.forEach((row) => {
+                            const tr = document.createElement("tr");
+                            tr.className = "bg-white border-b hover:bg-slate-50 transition";
+                            
+                            tr.innerHTML = `
+                                <td class="px-3 py-2 text-center font-bold text-slate-500">${row.id}</td>
+                                <td class="px-3 py-2">${row.outlook === 'Sunny' ? '☀️ แดดจัด' : '🌧️ ฝนตก'}</td>
+                                <td class="px-3 py-2">${row.wind === 'Weak' ? '🍃 เบา' : '💨 แรง'}</td>
+                                <td class="px-3 py-2 text-center">
+                                    <button class="play-toggle-btn px-3 py-1 rounded text-white text-[10px] font-bold shadow-sm transition ${row.play ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'}" data-id="${row.id}">
+                                        ${row.play ? 'เล่น (Yes)' : 'ไม่เล่น (No)'}
+                                    </button>
+                                </td>
+                            `;
+                            tableBody.appendChild(tr);
+                        });
+
+                        // Event listeners for toggle
+                        document.querySelectorAll(".play-toggle-btn").forEach(btn => {
+                            btn.addEventListener("click", function() {
+                                const id = parseInt(this.getAttribute("data-id"));
+                                const row = dataset.find(r => r.id === id);
+                                row.play = !row.play;
+                                updateTree();
+                            });
+                        });
+                    }
+
+                    function drawSvgText(x, y, text, color="#94a3b8", size=8, anchor="middle", bold=false) {
+                        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        t.setAttribute("x", x);
+                        t.setAttribute("y", y);
+                        t.setAttribute("fill", color);
+                        t.setAttribute("font-size", size);
+                        t.setAttribute("text-anchor", anchor);
+                        if (bold) t.setAttribute("font-weight", "bold");
+                        t.textContent = text;
+                        treeSvg.appendChild(t);
+                    }
+
+                    function drawSvgLine(x1, y1, x2, y2, color="#64748b", dashed=false) {
+                        const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        l.setAttribute("x1", x1);
+                        l.setAttribute("y1", y1);
+                        l.setAttribute("x2", x2);
+                        l.setAttribute("y2", y2);
+                        l.setAttribute("stroke", color);
+                        l.setAttribute("stroke-width", 1.5);
+                        if (dashed) l.setAttribute("stroke-dasharray", "3,3");
+                        treeSvg.appendChild(l);
+                    }
+
+                    function drawSvgCircle(x, y, r, fill, stroke="#ffffff") {
+                        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                        c.setAttribute("cx", x);
+                        c.setAttribute("cy", y);
+                        c.setAttribute("r", r);
+                        c.setAttribute("fill", fill);
+                        c.setAttribute("stroke", stroke);
+                        c.setAttribute("stroke-width", 1.5);
+                        treeSvg.appendChild(c);
+                    }
+
+                    function drawTreeLayout(rootAttr) {
+                        treeSvg.innerHTML = ''; // Clear SVG
+
+                        if (rootAttr === null) {
+                            drawSvgText(160, 120, "ข้อมูลเท่ากันหรือขาดความสมดุล", "#94a3b8", 10, "middle");
+                            return;
+                        }
+
+                        const rootText = rootAttr === 'outlook' ? 'ท้องฟ้า' : 'กระแสลม';
+                        const otherAttr = rootAttr === 'outlook' ? 'wind' : 'outlook';
+                        const otherText = otherAttr === 'outlook' ? 'ท้องฟ้า' : 'กระแสลม';
+
+                        // Draw Root Node
+                        drawSvgCircle(160, 40, 22, "#0284c7");
+                        drawSvgText(160, 43, rootText, "#ffffff", 8, "middle", true);
+
+                        // Branch values
+                        const rootVals = rootAttr === 'outlook' ? ['Sunny', 'Rainy'] : ['Weak', 'Strong'];
+                        const branchTexts = rootAttr === 'outlook' ? ['แดดจัด', 'ฝนตก'] : ['ลมเบา', 'ลมแรง'];
+
+                        // Position coordinates
+                        const leftX = 80, leftY = 120;
+                        const rightX = 240, rightY = 120;
+
+                        // Draw main branches lines
+                        drawSvgLine(160, 62, leftX, leftY);
+                        drawSvgText(110, 85, branchTexts[0], "#f1f5f9", 7, "middle");
+
+                        drawSvgLine(160, 62, rightX, rightY);
+                        drawSvgText(210, 85, branchTexts[1], "#f1f5f9", 7, "middle");
+
+                        // Left child decision/leaf
+                        const leftSub = dataset.filter(r => r[rootAttr] === rootVals[0]);
+                        const leftEnt = getEntropy(leftSub);
+                        if (leftEnt === 0 || leftSub.length === 0) {
+                            // Pure or Empty -> Leaf Node
+                            const playVal = leftSub.length > 0 ? leftSub[0].play : true;
+                            drawSvgCircle(leftX, leftY, 16, playVal ? "#10b981" : "#ef4444");
+                            drawSvgText(leftX, leftY + 3, playVal ? "เล่น" : "ไม่เล่น", "#ffffff", 8, "middle", true);
+                        } else {
+                            // Mixed -> Split on the other attribute
+                            drawSvgCircle(leftX, leftY, 18, "#8b5cf6");
+                            drawSvgText(leftX, leftY + 3, otherText, "#ffffff", 7, "middle", true);
+
+                            // Draw sub-branches from Left child
+                            const subVals = otherAttr === 'outlook' ? ['Sunny', 'Rainy'] : ['Weak', 'Strong'];
+                            const subBranchTexts = otherAttr === 'outlook' ? ['แดด', 'ฝน'] : ['ลมเบา', 'ลมแรง'];
+
+                            drawSvgLine(leftX, leftY + 18, 40, 190);
+                            drawSvgText(50, 160, subBranchTexts[0], "#e2e8f0", 6, "middle");
+                            const leftLeftSub = leftSub.filter(r => r[otherAttr] === subVals[0]);
+                            const leftLeftPlay = leftLeftSub.length > 0 ? leftLeftSub[0].play : true;
+                            drawSvgCircle(40, 190, 14, leftLeftPlay ? "#10b981" : "#ef4444");
+                            drawSvgText(40, 193, leftLeftPlay ? "เล่น" : "ไม่เล่น", "#ffffff", 6, "middle", true);
+
+                            drawSvgLine(leftX, leftY + 18, 120, 190);
+                            drawSvgText(110, 160, subBranchTexts[1], "#e2e8f0", 6, "middle");
+                            const leftRightSub = leftSub.filter(r => r[otherAttr] === subVals[1]);
+                            const leftRightPlay = leftRightSub.length > 0 ? leftRightSub[0].play : true;
+                            drawSvgCircle(120, 190, 14, leftRightPlay ? "#10b981" : "#ef4444");
+                            drawSvgText(120, 193, leftRightPlay ? "เล่น" : "ไม่เล่น", "#ffffff", 6, "middle", true);
+                        }
+
+                        // Right child decision/leaf
+                        const rightSub = dataset.filter(r => r[rootAttr] === rootVals[1]);
+                        const rightEnt = getEntropy(rightSub);
+                        if (rightEnt === 0 || rightSub.length === 0) {
+                            // Pure -> Leaf
+                            const playVal = rightSub.length > 0 ? rightSub[0].play : false;
+                            drawSvgCircle(rightX, rightY, 16, playVal ? "#10b981" : "#ef4444");
+                            drawSvgText(rightX, rightY + 3, playVal ? "เล่น" : "ไม่เล่น", "#ffffff", 8, "middle", true);
+                        } else {
+                            // Mixed -> Split
+                            drawSvgCircle(rightX, rightY, 18, "#8b5cf6");
+                            drawSvgText(rightX, rightY + 3, otherText, "#ffffff", 7, "middle", true);
+
+                            const subVals = otherAttr === 'outlook' ? ['Sunny', 'Rainy'] : ['Weak', 'Strong'];
+                            const subBranchTexts = otherAttr === 'outlook' ? ['แดด', 'ฝน'] : ['ลมเบา', 'ลมแรง'];
+
+                            drawSvgLine(rightX, rightY + 18, 200, 190);
+                            drawSvgText(210, 160, subBranchTexts[0], "#e2e8f0", 6, "middle");
+                            const rightLeftSub = rightSub.filter(r => r[otherAttr] === subVals[0]);
+                            const rightLeftPlay = rightLeftSub.length > 0 ? rightLeftSub[0].play : true;
+                            drawSvgCircle(200, 190, 14, rightLeftPlay ? "#10b981" : "#ef4444");
+                            drawSvgText(200, 193, rightLeftPlay ? "เล่น" : "ไม่เล่น", "#ffffff", 6, "middle", true);
+
+                            drawSvgLine(rightX, rightY + 18, 280, 190);
+                            drawSvgText(270, 160, subBranchTexts[1], "#e2e8f0", 6, "middle");
+                            const rightRightSub = rightSub.filter(r => r[otherAttr] === subVals[1]);
+                            const rightRightPlay = rightRightSub.length > 0 ? rightRightSub[0].play : true;
+                            drawSvgCircle(280, 190, 14, rightRightPlay ? "#10b981" : "#ef4444");
+                            drawSvgText(280, 193, rightRightPlay ? "เล่น" : "ไม่เล่น", "#ffffff", 6, "middle", true);
+                        }
+                    }
+
+                    function updateTree() {
+                        populateTable();
+
+                        const parentEntropy = getEntropy(dataset);
+                        const gainOutlook = getGain(dataset, 'outlook');
+                        const gainWind = getGain(dataset, 'wind');
+
+                        entropyParentDisp.textContent = parentEntropy.toFixed(4);
+                        gainOutlookDisp.textContent = gainOutlook.toFixed(4);
+                        gainWindDisp.textContent = gainWind.toFixed(4);
+
+                        let winner = '';
+                        if (parentEntropy === 0) {
+                            winner = 'สมบูรณ์แล้ว (คลาสเดี่ยว)';
+                            winnerAttrDisp.textContent = winner;
+                            // Draw static single leaf tree
+                            treeSvg.innerHTML = '';
+                            const playVal = dataset[0].play;
+                            drawSvgCircle(160, 120, 24, playVal ? "#10b981" : "#ef4444");
+                            drawSvgText(160, 123, playVal ? "เล่นกีฬา" : "ไม่เล่นกีฬา", "#ffffff", 10, "middle", true);
+                            return;
+                        }
+
+                        if (gainOutlook >= gainWind) {
+                            winner = 'ท้องฟ้า (Outlook)';
+                            winnerAttrDisp.textContent = winner;
+                            drawTreeLayout('outlook');
+                        } else {
+                            winner = 'กระแสลม (Wind)';
+                            winnerAttrDisp.textContent = winner;
+                            drawTreeLayout('wind');
+                        }
+                    }
+
+                    updateTree();
+                });
+            </script>
+        </section>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">06_decision_trees.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">สร้างโมเดลต้นไม้ตัดสินใจ (Decision Trees) และเรียนรู้วิธีคำนวณค่า Entropy, Information Gain รวมถึงการจูนไฮเปอร์พารามิเตอร์</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/06_decision_trees.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/06_decision_trees.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12 text-center text-sm">
+        <p>&copy; 2023 ML Learn by Anusorn Chaikaew</p>
+    </footer>
+
+</body>
+</html>

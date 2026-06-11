@@ -1,25 +1,12 @@
-
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                body {
-                  background-color: white; /* Ensure the iframe has a white background */
-                }
-    
-                
-              </style>
-                        </head>
-                        <body>
-                            <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>บทช่วยสอนการคำนวณ Logistic Regression ด้วยตนเอง</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -36,7 +23,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Sarabun', sans-serif;
         }
         
         body {
@@ -216,9 +203,50 @@
                 font-size: 2rem;
             }
         }
+    
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--primary);
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(4px);
+        }
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            color: var(--secondary);
+        }
+
     </style>
+
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
 </head>
 <body>
+
+    <a href="index.html" class="back-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="stroke-width: 2;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        กลับสู่สารบัญ
+    </a>
+
     <div class="container">
         <header>
             <h1>บทช่วยสอนการคำนวณ Logistic Regression ด้วยตนเอง</h1>
@@ -242,15 +270,15 @@
             <p>แก่นของ Logistic regression คือฟังก์ชัน sigmoid:</p>
             
             <div class="formula">
-                σ(z) = 1 / (1 + e<sup>-z</sup>)
+                $$\sigma(z) = \frac{1}{1 + e^{-z}}$$
             </div>
             
-            <p>โดยที่ z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b</p>
+            <p>โดยที่ $$z = w_1 x_1 + w_2 x_2 + \dots + w_n x_n + b$$</p>
             
             <p>ฟังก์ชันต้นทุนที่เราลดลงคือ:</p>
             
             <div class="formula">
-                J = -1/m Σ [y ln(ŷ) + (1-y) ln(1-ŷ)]
+                $$J = -\frac{1}{m} \sum_{i=1}^{m} \left[ y^{(i)} \ln(\hat{y}^{(i)}) + (1 - y^{(i)}) \ln(1 - \hat{y}^{(i)}) \right]$$
             </div>
             
             <div class="important">
@@ -778,18 +806,30 @@
             </div>
         </div>
         
+
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">04_training_linear_models.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">ลงมือสร้างโมเดล Logistic Regression ทีละขั้นตอน ตั้งแต่การจัดเตรียมข้อมูลจนถึงการหาขอบเขตการตัดสินใจ (Decision Boundary)</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/04_training_linear_models.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/04_training_linear_models.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
         <footer>
             <p>บทช่วยสอนการคำนวณ Logistic Regression ด้วยตนเอง | แหล่งความรู้เพื่อการศึกษา</p>
         </footer>
     </div>
 </body>
 </html>
-
-
-    
-              <script>
-                              
-              </script>
-                        </body>
-                        </html>
-                    

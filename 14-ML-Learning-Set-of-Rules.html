@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทที่ 14: Learning Set of Rules</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+    </style>
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <span class="text-sm font-semibold bg-white/20 py-1 px-3 rounded-full">บทที่ 14</span>
+            <h1 class="text-3xl md:text-4xl font-bold mt-3">Learning Set of Rules</h1>
+            <p class="mt-2 text-amber-100">การเรียนรู้เซตของกฎและกฎความสัมพันธ์เชิงข้อมูล</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Section 1: Learning Rules -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-amber-800 mb-4 border-b-2 border-amber-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center mr-3 font-semibold text-lg">1</span>
+                การเรียนรู้เซตของกฎ (Learning Set of Rules)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                แทนที่จะสร้างรูปแบบโครงสร้างต้นไม้เหมือน Decision Tree อัลกอริทึมกลุ่มนี้จะเลือกดึงข้อมูลออกมาสร้างเป็นกลุ่มของกฎกติกาในรูปแบบ **"ถ้า... แล้ว..." (IF - THEN Rules)** เพื่อให้เกิดความง่ายต่อมนุษย์ในการอ่านทำความเข้าใจและนำไปวิเคราะห์ต่อ
+            </p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4">
+                <div class="font-mono text-sm text-slate-700">
+                    <strong>IF</strong> วันหยุด = ใช่ <strong>AND</strong> สภาพอากาศ = ปลอดโปร่ง <strong>THEN</strong> กิจกรรม = ท่องเที่ยว
+                </div>
+            </div>
+            
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">อัลกอริทึม Sequential Covering</h3>
+            <p class="text-slate-600 leading-relaxed mb-4 text-sm">
+                เป็นวิธีการหลักในการสร้างกฎ โดยการกำหนดชุดกฎหนึ่งข้อที่จำแนกเป้าหมายได้ถูกต้องที่สุด จากนั้นจะทำการ **"คัดกรองตัวอย่างข้อมูลที่ตรงกับกฎข้อนั้นออกไป" (Covered Cases)** แล้วทำการวนซ้ำสร้างกฎข้อถัดไปเรื่อยๆ จนกระทั่งไม่มีข้อมูลตัวอย่างเหลือในคลังเก็บ
+            </p>
+            <p class="text-slate-600 leading-relaxed mb-4 text-sm">
+                อัลกอริทึมสร้างกฎที่ได้รับความนิยมคือ **CN2 Algorithm** ซึ่งออกแบบมาแก้ปัญหาเสียงรบกวนในข้อมูลโดยใช้ค่า Entropy หรือหลักความน่าจะเป็นเข้ามาวิเคราะห์เพื่อให้กฎที่สกัดออกมามีความเสถียรยิ่งขึ้น
+            </p>
+        </section>
+
+        <!-- Section 2: Association Rules -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-amber-800 mb-4 border-b-2 border-amber-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center mr-3 font-semibold text-lg">2</span>
+                กฎความสัมพันธ์และอัลกอริทึม Apriori (Association Rules)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>กฎความสัมพันธ์ (Association Rules)</strong> เป็นการวิเคราะห์หาความเชื่อมโยงของสิ่งของต่าง ๆ ที่มักจะเกิดขึ้นพร้อมกัน (เช่น การหาความเกี่ยวโยงของสินค้าที่ลูกค้าเลือกซื้อพร้อมกันในตะกร้าซูเปอร์มาร์เก็ต หรือ Market Basket Analysis) 
+            </p>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">เมตริกสำคัญ 3 ประการในการวัดคุณภาพของกฎ</h3>
+            <p class="text-slate-600 mb-4 text-sm">
+                พิจารณากฎความสัมพันธ์ในรูปแบบ $X \rightarrow Y$ ($X$ ส่งผลให้ซื้อ $Y$):
+            </p>
+
+            <!-- Support -->
+            <div class="border-l-4 border-amber-500 bg-slate-50 p-4 rounded-r-xl mb-4">
+                <h4 class="font-bold text-slate-800 text-sm">1. Support (ค่าสนับสนุน)</h4>
+                <p class="text-slate-600 text-xs mb-2">สัดส่วนของธุรกรรมทั้งหมดที่มีทั้ง $X$ และ $Y$ อยู่ร่วมกัน</p>
+                <div class="font-mono text-sm">
+                    $$Support(X \rightarrow Y) = \frac{Transactions(X \cup Y)}{Total \, Transactions}$$
+                </div>
+            </div>
+
+            <!-- Confidence -->
+            <div class="border-l-4 border-amber-500 bg-slate-50 p-4 rounded-r-xl mb-4">
+                <h4 class="font-bold text-slate-800 text-sm">2. Confidence (ค่าความเชื่อมั่น)</h4>
+                <p class="text-slate-600 text-xs mb-2">โอกาสที่จะซื้อ $Y$ เมื่อมีการซื้อ $X$ เกิดขึ้นแล้ว</p>
+                <div class="font-mono text-sm">
+                    $$Confidence(X \rightarrow Y) = \frac{Support(X \cup Y)}{Support(X)}$$
+                </div>
+            </div>
+
+            <!-- Lift -->
+            <div class="border-l-4 border-amber-500 bg-slate-50 p-4 rounded-r-xl mb-4">
+                <h4 class="font-bold text-slate-800 text-sm">3. Lift (ค่าแรงจูงใจ)</h4>
+                <p class="text-slate-600 text-xs mb-2">ตัวชี้วัดความสัมพันธ์ว่าการเกิด $X$ ส่งเสริมให้เกิด $Y$ มากน้อยเพียงใด (ค่า Lift > 1 หมายถึงเชิงบวก, Lift = 1 เป็นอิสระต่อกัน)</p>
+                <div class="font-mono text-sm">
+                    $$Lift(X \rightarrow Y) = \frac{Confidence(X \rightarrow Y)}{Support(Y)}$$
+                </div>
+            </div>
+        </section>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">06_decision_trees.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">ทำความเข้าใจการสร้างกฎการจำแนกประเภท (IF-THEN Rules) จากการแปลงโครงสร้างการตัดสินใจของ Decision Tree</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/06_decision_trees.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/06_decision_trees.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12 text-center text-sm">
+        <p>&copy; 2023 ML Learn by Anusorn Chaikaew</p>
+    </footer>
+
+</body>
+</html>

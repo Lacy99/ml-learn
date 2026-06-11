@@ -47,33 +47,320 @@
             border-width: 2px;
         }
     </style>
+
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
 </head>
 <body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
     <script>
-    // ฟังก์ชัน toggle แสดง/ซ่อนรายละเอียด metric
+    // ฟังก์ชัน toggle แสดง/ซ่อนรายละเอียด metric และวาดกราฟ
+    const chartInstances = {};
+    
+    function initChartForDetail(detailId) {
+        const canvasId = detailId.replace('-detail', '-chart');
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        
+        if (chartInstances[canvasId]) {
+            chartInstances[canvasId].destroy();
+        }
+        
+        const ctx = canvas.getContext('2d');
+        let config = {};
+        
+        if (canvasId === 'mse-chart') {
+            config = {
+                type: 'bar',
+                data: {
+                    labels: ['1', '2', '3', '4', '5'],
+                    datasets: [
+                        {
+                            label: 'Absolute Error (MAE Penalty)',
+                            data: [1, 2, 3, 4, 5],
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Squared Error (MSE Penalty)',
+                            data: [1, 4, 9, 16, 25],
+                            backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'การเปรียบเทียบการลงโทษความผิดพลาด (MAE vs MSE)' }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'ค่าปรับ (Penalty)' } },
+                        x: { title: { display: true, text: 'ขนาดความผิดพลาด (Error Size)' } }
+                    }
+                }
+            };
+        } else if (canvasId === 'rmse-chart') {
+            config = {
+                type: 'bar',
+                data: {
+                    labels: ['ไม่มี Outlier [2, 2, 2, 2, 2]', 'มี Outlier [2, 2, 2, 2, 10]'],
+                    datasets: [
+                        {
+                            label: 'MAE',
+                            data: [2.0, 3.6],
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'RMSE',
+                            data: [2.0, 4.9],
+                            backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                            borderColor: 'rgb(239, 68, 68)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'ผลกระทบของ Outlier ต่อ MAE และ RMSE' }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'ค่าดัชนีวัดผล' }, min: 0, max: 6 }
+                    }
+                }
+            };
+        } else if (canvasId === 'mae-chart') {
+            config = {
+                type: 'line',
+                data: {
+                    labels: ['-3', '-2', '-1', '0', '1', '2', '3'],
+                    datasets: [{
+                        label: 'Absolute Error Loss',
+                        data: [3, 2, 1, 0, 1, 2, 3],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'ฟังก์ชันการสูญเสียแบบสัมบูรณ์ (Absolute Loss Curve)' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'ค่าจริง - ค่าทำนาย (y - ŷ)' } },
+                        y: { title: { display: true, text: 'ค่าสูญเสีย (Loss)' }, min: 0 }
+                    }
+                }
+            };
+        } else if (canvasId === 'r2-chart') {
+            config = {
+                type: 'bar',
+                data: {
+                    labels: ['โมเดลดีมาก', 'โมเดลทั่วไป', 'โมเดลค่าเฉลี่ย (Baseline)', 'โมเดลแย่กว่าค่าเฉลี่ย'],
+                    datasets: [{
+                        label: 'R-squared (R²)',
+                        data: [0.90, 0.50, 0.00, -0.30],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.5)',
+                            'rgba(59, 130, 246, 0.5)',
+                            'rgba(156, 163, 175, 0.5)',
+                            'rgba(239, 68, 68, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(59, 130, 246)',
+                            'rgb(156, 163, 175)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'ความหมายของค่า R-squared ในรูปแบบต่างๆ' },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'R² Value' }, min: -0.5, max: 1.0 }
+                    }
+                }
+            };
+        } else if (canvasId === 'accuracy-chart') {
+            config = {
+                type: 'bar',
+                data: {
+                    labels: ['จำนวนคลาสบวกจริง', 'จำนวนคลาสลบจริง', 'ทำนายลบทั้งหมด (Accuracy 90%)'],
+                    datasets: [
+                        {
+                            label: 'คลาสบวกจริง (Positive)',
+                            data: [10, 0, 0],
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)'
+                        },
+                        {
+                            label: 'คลาสลบจริง (Negative)',
+                            data: [0, 90, 90],
+                            backgroundColor: 'rgba(156, 163, 175, 0.6)'
+                        },
+                        {
+                            label: 'ทำนายว่าเป็นลบทั้งหมด',
+                            data: [0, 0, 100],
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'ทำไม Accuracy 90% อาจล้มเหลวในกรณี Class Imbalance' }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'จำนวนตัวอย่าง (Samples)' } }
+                    }
+                }
+            };
+        } else if (canvasId === 'precision-chart' || canvasId === 'recall-chart' || canvasId === 'f1-chart') {
+            config = {
+                type: 'line',
+                data: {
+                    labels: ['0.1', '0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9'],
+                    datasets: [
+                        {
+                            label: 'Precision',
+                            data: [0.55, 0.60, 0.68, 0.75, 0.82, 0.88, 0.92, 0.96, 1.00],
+                            borderColor: 'rgb(236, 72, 153)',
+                            backgroundColor: 'transparent',
+                            borderWidth: canvasId === 'precision-chart' ? 3 : 1.5,
+                            pointRadius: canvasId === 'precision-chart' ? 4 : 2
+                        },
+                        {
+                            label: 'Recall',
+                            data: [1.00, 0.96, 0.92, 0.85, 0.78, 0.68, 0.55, 0.35, 0.15],
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'transparent',
+                            borderWidth: canvasId === 'recall-chart' ? 3 : 1.5,
+                            pointRadius: canvasId === 'recall-chart' ? 4 : 2
+                        },
+                        {
+                            label: 'F1-score',
+                            data: [0.71, 0.74, 0.78, 0.80, 0.80, 0.77, 0.69, 0.51, 0.26],
+                            borderColor: 'rgb(16, 185, 129)',
+                            backgroundColor: 'transparent',
+                            borderWidth: canvasId === 'f1-chart' ? 3 : 1.5,
+                            pointRadius: canvasId === 'f1-chart' ? 4 : 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'กราฟการปรับ Threshold กับค่า Precision, Recall และ F1-score' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'ค่าเกณฑ์ตัดสินใจ (Classification Threshold)' } },
+                        y: { title: { display: true, text: 'ค่าประสิทธิภาพ' }, min: 0, max: 1.0 }
+                    }
+                }
+            };
+        } else if (canvasId === 'roc-chart') {
+            config = {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'ROC Curve (AUC = 0.85)',
+                            data: [
+                                { x: 0, y: 0 },
+                                { x: 0.05, y: 0.25 },
+                                { x: 0.10, y: 0.50 },
+                                { x: 0.20, y: 0.70 },
+                                { x: 0.40, y: 0.85 },
+                                { x: 0.60, y: 0.92 },
+                                { x: 0.80, y: 0.97 },
+                                { x: 1.00, y: 1.00 }
+                            ],
+                            borderColor: 'rgb(236, 72, 153)',
+                            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Random Classifier (AUC = 0.50)',
+                            data: [
+                                { x: 0, y: 0 },
+                                { x: 1, y: 1 }
+                            ],
+                            borderColor: 'rgb(156, 163, 175)',
+                            borderDash: [5, 5],
+                            backgroundColor: 'transparent'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'เส้นโค้ง ROC (Receiver Operating Characteristic)' }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: 'False Positive Rate (1 - Specificity)' },
+                            min: 0,
+                            max: 1.0
+                        },
+                        y: {
+                            title: { display: true, text: 'True Positive Rate (Sensitivity / Recall)' },
+                            min: 0,
+                            max: 1.0
+                        }
+                    }
+                }
+            };
+        }
+        
+        chartInstances[canvasId] = new Chart(ctx, config);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // เลือกปุ่มทั้งหมดที่อยู่ใน metric-card
         const buttons = document.querySelectorAll('.metric-card button');
         buttons.forEach(btn => {
             btn.addEventListener('click', function(e) {
-                // หา card ปัจจุบัน
                 const card = btn.closest('.metric-card');
-                // หา id ของ card เช่น mse-card, accuracy-card
                 if (!card || !card.id) return;
-                // id ของรายละเอียด เช่น mse-detail, accuracy-detail
                 const detailId = card.id.replace('-card', '-detail');
                 const detail = document.getElementById(detailId);
                 if (!detail) return;
-                // ซ่อนรายละเอียดอื่นๆ ทั้งหมด
+                
                 document.querySelectorAll('.metric-detail').forEach(d => {
                     if (d !== detail) d.style.display = 'none';
                 });
-                // toggle แสดง/ซ่อน
+                
                 if (detail.style.display === 'block') {
                     detail.style.display = 'none';
                 } else {
                     detail.style.display = 'block';
-                    // scroll ให้เห็นรายละเอียด
+                    initChartForDetail(detailId);
                     detail.scrollIntoView({behavior: 'smooth', block: 'center'});
                 }
             });
@@ -141,7 +428,7 @@
                                 <h3 class="text-xl font-semibold text-gray-800">MSE (Mean Squared Error)</h3>
                             </div>
                             <p class="text-gray-700 mb-3">ค่าเฉลี่ยของกำลังสองของความแตกต่างระหว่างค่าที่ทำนายได้กับค่าจริง</p>
-                            <div class="formula mb-3">MSE = (1/n) * Σ(y_i - ŷ_i)²</div>
+                            <div class="formula mb-3">$$MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$</div>
                             <div class="flex justify-end">
                                 <button class="text-blue-600 hover:text-blue-800 font-medium">ดูรายละเอียด ▼</button>
                             </div>
@@ -157,7 +444,7 @@
                                 <h3 class="text-xl font-semibold text-gray-800">RMSE (Root Mean Squared Error)</h3>
                             </div>
                             <p class="text-gray-700 mb-3">รากที่สองของค่าเฉลี่ยของกำลังสองของความแตกต่างระหว่างค่าที่ทำนายได้กับค่าจริง</p>
-                            <div class="formula mb-3">RMSE = √[(1/n) * Σ(y_i - ŷ_i)²]</div>
+                            <div class="formula mb-3">$$RMSE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}$$</div>
                             <div class="flex justify-end">
                                 <button class="text-blue-600 hover:text-blue-800 font-medium">ดูรายละเอียด ▼</button>
                             </div>
@@ -173,7 +460,7 @@
                                 <h3 class="text-xl font-semibold text-gray-800">MAE (Mean Absolute Error)</h3>
                             </div>
                             <p class="text-gray-700 mb-3">ค่าเฉลี่ยของค่าสัมบูรณ์ของความแตกต่างระหว่างค่าที่ทำนายได้กับค่าจริง</p>
-                            <div class="formula mb-3">MAE = (1/n) * Σ|y_i - ŷ_i|</div>
+                            <div class="formula mb-3">$$MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$$</div>
                             <div class="flex justify-end">
                                 <button class="text-blue-600 hover:text-blue-800 font-medium">ดูรายละเอียด ▼</button>
                             </div>
@@ -202,7 +489,7 @@
                             <div>
                                 <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> MSE คือค่าเฉลี่ยของกำลังสองของความแตกต่างระหว่างค่าที่ทำนายได้กับค่าจริง</p>
                                 <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">MSE = (1/n) * Σ(y_i - ŷ_i)²</div>
+                                <div class="formula mb-3">$$MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$</div>
                                 <p class="text-gray-700 mb-3">โดยที่:</p>
                                 <ul class="list-disc pl-5 text-gray-700 mb-3">
                                     <li>n คือจำนวนตัวอย่างทั้งหมด</li>
@@ -247,7 +534,7 @@
                             <div>
                                 <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> RMSE คือรากที่สองของค่าเฉลี่ยของกำลังสองของความแตกต่างระหว่างค่าที่ทำนายได้กับค่าจริง</p>
                                 <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">RMSE = √[(1/n) * Σ(y_i - ŷ_i)²]</div>
+                                <div class="formula mb-3">$$RMSE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}$$</div>
                                 <p class="text-gray-700 mb-3">โดยที่:</p>
                                 <ul class="list-disc pl-5 text-gray-700 mb-3">
                                     <li>n คือจำนวนตัวอย่างทั้งหมด</li>
@@ -292,7 +579,7 @@
                             <div>
                                 <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> MAE คือค่าเฉลี่ยของค่าสัมบูรณ์ของความแตกต่างระหว่างค่าที่ทำนายได้กับค่าจริง</p>
                                 <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">MAE = (1/n) * Σ|y_i - ŷ_i|</div>
+                                <div class="formula mb-3">$$MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|$$</div>
                                 <p class="text-gray-700 mb-3">โดยที่:</p>
                                 <ul class="list-disc pl-5 text-gray-700 mb-3">
                                     <li>n คือจำนวนตัวอย่างทั้งหมด</li>
@@ -451,9 +738,320 @@
                         </div>
 
                 </div>
-                <!-- ตัวอย่าง Confusion Matrix แบบหลายคลาส (Iris Dataset) ย้ายมาด้านล่างสุด -->
-</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-700 mb-2"><strong>True Positive (TP):</strong> ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</p>
+                                <p class="text-gray-700 mb-2"><strong>False Positive (FP):</strong> ทำนายว่าเป็นคลาสบวก แต่เป็นคลาสลบจริง (Type I Error)</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 mb-2"><strong>False Negative (FN):</strong> ทำนายว่าเป็นคลาสลบ แต่เป็นคลาสบวกจริง (Type II Error)</p>
+                                <p class="text-gray-700 mb-2"><strong>True Negative (TN):</strong> ทำนายว่าเป็นคลาสลบ และเป็นคลาสลบจริง</p>
+                        </div>
+                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div id="accuracy-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-800">Accuracy (ความแม่นยำ)</h3>
+                            </div>
+                            <p class="text-gray-700 mb-3">สัดส่วนของการทำนายที่ถูกต้องทั้งหมด</p>
+                            <div class="formula mb-3">$$Accuracy = \frac{TP + TN}{TP + TN + FP + FN}$$</div>
+                            <div class="flex justify-end">
+                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
+                            </div>
+                        </div>
 
+                        <div id="precision-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-800">Precision (ความเที่ยง)</h3>
+                            </div>
+                            <p class="text-gray-700 mb-3">สัดส่วนของการทำนายคลาสบวกที่ถูกต้อง</p>
+                            <div class="formula mb-3">$$Precision = \frac{TP}{TP + FP}$$</div>
+                            <div class="flex justify-end">
+                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
+                            </div>
+                        </div>
+
+                        <div id="recall-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-800">Recall (ความไว)</h3>
+                            </div>
+                            <p class="text-gray-700 mb-3">สัดส่วนของคลาสบวกจริงที่ถูกทำนายว่าเป็นคลาสบวก</p>
+                            <div class="formula mb-3">$$Recall = \frac{TP}{TP + FN}$$</div>
+                            <div class="flex justify-end">
+                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
+                            </div>
+                        </div>
+
+                        <div id="f1-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-800">F1-score</h3>
+                            </div>
+                            <p class="text-gray-700 mb-3">ค่าเฉลี่ยฮาร์โมนิกของ Precision และ Recall</p>
+                            <div class="formula mb-3">$$F_1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}$$</div>
+                            <div class="flex justify-end">
+                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
+                            </div>
+                        </div>
+
+                        <div id="roc-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-800">ROC-AUC</h3>
+                            </div>
+                            <p class="text-gray-700 mb-3">พื้นที่ใต้กราฟ ROC (Receiver Operating Characteristic)</p>
+                            <div class="formula mb-3">AUC = พื้นที่ใต้กราฟ ROC</div>
+                            <div class="flex justify-end">
+                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="accuracy-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Accuracy (ความแม่นยำ) - รายละเอียด</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> Accuracy คือสัดส่วนของการทำนายที่ถูกต้องทั้งหมด</p>
+                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
+                                <div class="formula mb-3">$$Accuracy = \frac{TP + TN}{TP + TN + FP + FN}$$</div>
+                                <p class="text-gray-700 mb-3">โดยที่:</p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>TP (True Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</li>
+                                    <li>TN (True Negative) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสลบ และเป็นคลาสลบจริง</li>
+                                    <li>FP (False Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก แต่เป็นคลาสลบจริง</li>
+                                    <li>FN (False Negative) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสลบ แต่เป็นคลาสบวกจริง</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ค่า Accuracy อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
+                                    <li>ค่า Accuracy ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
+                                    <li>Accuracy = 1 หมายถึงโมเดลทำนายได้ถูกต้องทั้งหมด</li>
+                                    <li>Accuracy = 0 หมายถึงโมเดลทำนายผิดทั้งหมด</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>เข้าใจง่าย</li>
+                                    <li>คำนวณง่าย</li>
+                                    <li>เหมาะสำหรับปัญหาที่มีความสมดุลของคลาส</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>ไม่เหมาะสำหรับปัญหาที่มีความไม่สมดุลของคลาส (Class Imbalance)</li>
+                                    <li>อาจทำให้เข้าใจผิดเกี่ยวกับประสิทธิภาพของโมเดลในกรณีที่คลาสไม่สมดุล</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ใช้วัดประสิทธิภาพโดยรวมของโมเดล</li>
+                                    <li>เหมาะสำหรับปัญหาที่มีความสมดุลของคลาส</li>
+                                    <li>ใช้เป็นเมตริกเริ่มต้นในการประเมินโมเดล</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <canvas id="accuracy-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="precision-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Precision (ความเที่ยง) - รายละเอียด</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> Precision คือสัดส่วนของการทำนายคลาสบวกที่ถูกต้อง</p>
+                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
+                                <div class="formula mb-3">$$Precision = \frac{TP}{TP + FP}$$</div>
+                                <p class="text-gray-700 mb-3">โดยที่:</p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>TP (True Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</li>
+                                    <li>FP (False Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก แต่เป็นคลาสลบจริง</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ค่า Precision อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
+                                    <li>ค่า Precision ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
+                                    <li>Precision = 1 หมายถึงไม่มี False Positive เลย (ทุกครั้งที่ทำนายว่าเป็นคลาสบวก จะเป็นคลาสบวกจริง)</li>
+                                    <li>Precision = 0 หมายถึงไม่มี True Positive เลย (ทุกครั้งที่ทำนายว่าเป็นคลาสบวก จะเป็นคลาสลบจริง)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>เหมาะสำหรับปัญหาที่ต้องการลดความผิดพลาดแบบ False Positive</li>
+                                    <li>ใช้วัดความน่าเชื่อถือของการทำนายคลาสบวก</li>
+                                    <li>ไม่ได้รับผลกระทบจากจำนวน True Negative</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>ไม่ได้พิจารณา False Negative</li>
+                                    <li>อาจทำให้เข้าใจผิดในกรณีที่มี Class Imbalance</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ใช้ในกรณีที่ต้นทุนของ False Positive สูง</li>
+                                    <li>เช่น การกรองสแปม (ต้องการให้แน่ใจว่าอีเมลที่ถูกทำนายว่าเป็นสแปมนั้นเป็นสแปมจริงๆ)</li>
+                                    <li>การวินิจฉัยโรค (ต้องการให้แน่ใจว่าผู้ป่วยที่ถูกวินิจฉัยว่าเป็นโรคนั้นเป็นโรคจริงๆ)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <canvas id="precision-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="recall-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Recall (ความไว) - รายละเอียด</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> Recall คือสัดส่วนของคลาสบวกจริงที่ถูกทำนายว่าเป็นคลาสบวก</p>
+                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
+                                <div class="formula mb-3">$$Recall = \frac{TP}{TP + FN}$$</div>
+                                <p class="text-gray-700 mb-3">โดยที่:</p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>TP (True Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</li>
+                                    <li>FN (False Negative) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสลบ แต่เป็นคลาสบวกจริง</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ค่า Recall อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
+                                    <li>ค่า Recall ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
+                                    <li>Recall = 1 หมายถึงไม่มี False Negative เลย (ทุกตัวอย่างที่เป็นคลาสบวกจริงถูกทำนายว่าเป็นคลาสบวก)</li>
+                                    <li>Recall = 0 หมายถึงไม่มี True Positive เลย (ทุกตัวอย่างที่เป็นคลาสบวกจริงถูกทำนายว่าเป็นคลาสลบ)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>เหมาะสำหรับปัญหาที่ต้องการลดความผิดพลาดแบบ False Negative</li>
+                                    <li>ใช้วัดความสามารถในการค้นหาคลาสบวกทั้งหมด</li>
+                                    <li>ไม่ได้รับผลกระทบจากจำนวน True Negative</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>ไม่ได้พิจารณา False Positive</li>
+                                    <li>อาจทำให้เข้าใจผิดในกรณีที่มี Class Imbalance</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ใช้ในกรณีที่ต้นทุนของ False Negative สูง</li>
+                                    <li>เช่น การตรวจจับการฉ้อโกง (ต้องการตรวจจับการฉ้อโกงให้ได้มากที่สุด)</li>
+                                    <li>การวินิจฉัยโรคร้ายแรง (ต้องการตรวจพบผู้ป่วยที่เป็นโรคให้ได้มากที่สุด)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <canvas id="recall-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="f1-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">F1-score - รายละเอียด</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> F1-score คือค่าเฉลี่ยฮาร์โมนิกของ Precision และ Recall</p>
+                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
+                                <div class="formula mb-3">$$F_1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}$$</div>
+                                <p class="text-gray-700 mb-3">โดยที่:</p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>Precision = TP / (TP + FP)</li>
+                                    <li>Recall = TP / (TP + FN)</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ค่า F1-score อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
+                                    <li>ค่า F1-score ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
+                                    <li>F1-score จะมีค่าสูงเมื่อทั้ง Precision และ Recall มีค่าสูง</li>
+                                    <li>F1-score จะมีค่าต่ำเมื่อ Precision หรือ Recall มีค่าต่ำ</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>พิจารณาทั้ง Precision และ Recall</li>
+                                    <li>เหมาะสำหรับปัญหาที่มีความไม่สมดุลของคลาส</li>
+                                    <li>ให้ความสำคัญกับค่าที่ต่ำระหว่าง Precision และ Recall</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>ไม่ได้พิจารณา True Negative</li>
+                                    <li>ให้น้ำหนักเท่ากันระหว่าง Precision และ Recall</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ใช้เมื่อต้องการสมดุลระหว่าง Precision และ Recall</li>
+                                    <li>ใช้ในปัญหาที่มีความไม่สมดุลของคลาส</li>
+                                    <li>ใช้เมื่อต้องการเมตริกเดียวที่สะท้อนทั้ง Precision และ Recall</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <canvas id="f1-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="roc-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">ROC-AUC - รายละเอียด</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> ROC-AUC คือพื้นที่ใต้กราฟ ROC (Receiver Operating Characteristic) ซึ่งแสดงความสัมพันธ์ระหว่าง True Positive Rate (TPR) และ False Positive Rate (FPR) ที่ threshold ต่างๆ</p>
+                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
+                                <div class="formula mb-3" style="font-family: inherit; white-space: normal;">
+                                    $$TPR = \frac{TP}{TP + FN} = Recall$$
+                                    $$FPR = \frac{FP}{FP + TN}$$
+                                    $$AUC = \text{พื้นที่ใต้กราฟ ROC}$$
+                                </div>
+                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700">
+                                    <li>ค่า AUC อยู่ระหว่าง 0 ถึง 1</li>
+                                    <li>AUC = 1 หมายถึงโมเดลสามารถแยกคลาสได้อย่างสมบูรณ์</li>
+                                    <li>AUC = 0.5 หมายถึงโมเดลทำนายไม่ดีไปกว่าการสุ่ม</li>
+                                    <li>AUC = 0 หมายถึงโมเดลทำนายผิดทั้งหมด (แต่สามารถกลับการทำนายเพื่อให้ได้ AUC = 1)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>ไม่ขึ้นกับ threshold ที่เลือก</li>
+                                    <li>ทนทานต่อความไม่สมดุลของคลาส</li>
+                                    <li>วัดความสามารถในการจัดอันดับของโมเดล</li>
+                                </ul>
+                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
+                                <ul class="list-disc pl-5 text-gray-700 mb-3">
+                                    <li>ไม่ได้บอกถึงประสิทธิภาพที่ threshold ใดๆ โดยเฉพาะ</li>
+                                    <li>อาจทำให้เข้าใจผิดในกรณีที่มีความไม่สมดุลของคลาสมาก</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <canvas id="roc-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 <!-- ตัวอย่างการคำนวณแบบหลายคลาส (Iris Dataset) ย้ายมาด้านล่างสุดของเพจ -->
 <div class="container mx-auto px-4 py-8 mt-8 mb-8 bg-white rounded-xl shadow-md">
     <h4 class="text-lg font-semibold text-gray-800 mb-2">ตัวอย่างการคำนวณแบบหลายคลาส (Iris Dataset)</h4>
@@ -605,311 +1203,32 @@
         </ul>
     </div>
 </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-700 mb-2"><strong>True Positive (TP):</strong> ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</p>
-                                <p class="text-gray-700 mb-2"><strong>False Positive (FP):</strong> ทำนายว่าเป็นคลาสบวก แต่เป็นคลาสลบจริง (Type I Error)</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-700 mb-2"><strong>False Negative (FN):</strong> ทำนายว่าเป็นคลาสลบ แต่เป็นคลาสบวกจริง (Type II Error)</p>
-                                <p class="text-gray-700 mb-2"><strong>True Negative (TN):</strong> ทำนายว่าเป็นคลาสลบ และเป็นคลาสลบจริง</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <div id="accuracy-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
-                            <div class="flex items-center mb-4">
-                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800">Accuracy (ความแม่นยำ)</h3>
-                            </div>
-                            <p class="text-gray-700 mb-3">สัดส่วนของการทำนายที่ถูกต้องทั้งหมด</p>
-                            <div class="formula mb-3">Accuracy = (TP + TN) / (TP + TN + FP + FN)</div>
-                            <div class="flex justify-end">
-                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
-                            </div>
-                        </div>
 
-                        <div id="precision-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
-                            <div class="flex items-center mb-4">
-                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800">Precision (ความเที่ยง)</h3>
-                            </div>
-                            <p class="text-gray-700 mb-3">สัดส่วนของการทำนายคลาสบวกที่ถูกต้อง</p>
-                            <div class="formula mb-3">Precision = TP / (TP + FP)</div>
-                            <div class="flex justify-end">
-                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
-                            </div>
-                        </div>
-
-                        <div id="recall-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
-                            <div class="flex items-center mb-4">
-                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800">Recall (ความไว)</h3>
-                            </div>
-                            <p class="text-gray-700 mb-3">สัดส่วนของคลาสบวกจริงที่ถูกทำนายว่าเป็นคลาสบวก</p>
-                            <div class="formula mb-3">Recall = TP / (TP + FN)</div>
-                            <div class="flex justify-end">
-                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
-                            </div>
-                        </div>
-
-                        <div id="f1-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
-                            <div class="flex items-center mb-4">
-                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800">F1-score</h3>
-                            </div>
-                            <p class="text-gray-700 mb-3">ค่าเฉลี่ยฮาร์โมนิกของ Precision และ Recall</p>
-                            <div class="formula mb-3">F1 = 2 * (Precision * Recall) / (Precision + Recall)</div>
-                            <div class="flex justify-end">
-                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
-                            </div>
-                        </div>
-
-                        <div id="roc-card" class="metric-card bg-pink-50 rounded-lg shadow-md p-5 border-2 border-transparent">
-                            <div class="flex items-center mb-4">
-                                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                                    </svg>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800">ROC-AUC</h3>
-                            </div>
-                            <p class="text-gray-700 mb-3">พื้นที่ใต้กราฟ ROC (Receiver Operating Characteristic)</p>
-                            <div class="formula mb-3">AUC = พื้นที่ใต้กราฟ ROC</div>
-                            <div class="flex justify-end">
-                                <button class="text-pink-600 hover:text-pink-800 font-medium">ดูรายละเอียด ▼</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="accuracy-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Accuracy (ความแม่นยำ) - รายละเอียด</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> Accuracy คือสัดส่วนของการทำนายที่ถูกต้องทั้งหมด</p>
-                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">Accuracy = (TP + TN) / (TP + TN + FP + FN)</div>
-                                <p class="text-gray-700 mb-3">โดยที่:</p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>TP (True Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</li>
-                                    <li>TN (True Negative) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสลบ และเป็นคลาสลบจริง</li>
-                                    <li>FP (False Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก แต่เป็นคลาสลบจริง</li>
-                                    <li>FN (False Negative) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสลบ แต่เป็นคลาสบวกจริง</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ค่า Accuracy อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
-                                    <li>ค่า Accuracy ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
-                                    <li>Accuracy = 1 หมายถึงโมเดลทำนายได้ถูกต้องทั้งหมด</li>
-                                    <li>Accuracy = 0 หมายถึงโมเดลทำนายผิดทั้งหมด</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>เข้าใจง่าย</li>
-                                    <li>คำนวณง่าย</li>
-                                    <li>เหมาะสำหรับปัญหาที่มีความสมดุลของคลาส</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>ไม่เหมาะสำหรับปัญหาที่มีความไม่สมดุลของคลาส (Class Imbalance)</li>
-                                    <li>อาจทำให้เข้าใจผิดเกี่ยวกับประสิทธิภาพของโมเดลในกรณีที่คลาสไม่สมดุล</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ใช้วัดประสิทธิภาพโดยรวมของโมเดล</li>
-                                    <li>เหมาะสำหรับปัญหาที่มีความสมดุลของคลาส</li>
-                                    <li>ใช้เป็นเมตริกเริ่มต้นในการประเมินโมเดล</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <canvas id="accuracy-chart" width="400" height="200"></canvas>
-                        </div>
-                    </div>
-
-                    <div id="precision-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Precision (ความเที่ยง) - รายละเอียด</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> Precision คือสัดส่วนของการทำนายคลาสบวกที่ถูกต้อง</p>
-                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">Precision = TP / (TP + FP)</div>
-                                <p class="text-gray-700 mb-3">โดยที่:</p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>TP (True Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</li>
-                                    <li>FP (False Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก แต่เป็นคลาสลบจริง</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ค่า Precision อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
-                                    <li>ค่า Precision ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
-                                    <li>Precision = 1 หมายถึงไม่มี False Positive เลย (ทุกครั้งที่ทำนายว่าเป็นคลาสบวก จะเป็นคลาสบวกจริง)</li>
-                                    <li>Precision = 0 หมายถึงไม่มี True Positive เลย (ทุกครั้งที่ทำนายว่าเป็นคลาสบวก จะเป็นคลาสลบจริง)</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>เหมาะสำหรับปัญหาที่ต้องการลดความผิดพลาดแบบ False Positive</li>
-                                    <li>ใช้วัดความน่าเชื่อถือของการทำนายคลาสบวก</li>
-                                    <li>ไม่ได้รับผลกระทบจากจำนวน True Negative</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>ไม่ได้พิจารณา False Negative</li>
-                                    <li>อาจทำให้เข้าใจผิดในกรณีที่มี Class Imbalance</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ใช้ในกรณีที่ต้นทุนของ False Positive สูง</li>
-                                    <li>เช่น การกรองสแปม (ต้องการให้แน่ใจว่าอีเมลที่ถูกทำนายว่าเป็นสแปมนั้นเป็นสแปมจริงๆ)</li>
-                                    <li>การวินิจฉัยโรค (ต้องการให้แน่ใจว่าผู้ป่วยที่ถูกวินิจฉัยว่าเป็นโรคนั้นเป็นโรคจริงๆ)</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <canvas id="precision-chart" width="400" height="200"></canvas>
-                        </div>
-                    </div>
-
-                    <div id="recall-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Recall (ความไว) - รายละเอียด</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> Recall คือสัดส่วนของคลาสบวกจริงที่ถูกทำนายว่าเป็นคลาสบวก</p>
-                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">Recall = TP / (TP + FN)</div>
-                                <p class="text-gray-700 mb-3">โดยที่:</p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>TP (True Positive) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสบวก และเป็นคลาสบวกจริง</li>
-                                    <li>FN (False Negative) คือจำนวนตัวอย่างที่ทำนายว่าเป็นคลาสลบ แต่เป็นคลาสบวกจริง</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ค่า Recall อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
-                                    <li>ค่า Recall ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
-                                    <li>Recall = 1 หมายถึงไม่มี False Negative เลย (ทุกตัวอย่างที่เป็นคลาสบวกจริงถูกทำนายว่าเป็นคลาสบวก)</li>
-                                    <li>Recall = 0 หมายถึงไม่มี True Positive เลย (ทุกตัวอย่างที่เป็นคลาสบวกจริงถูกทำนายว่าเป็นคลาสลบ)</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>เหมาะสำหรับปัญหาที่ต้องการลดความผิดพลาดแบบ False Negative</li>
-                                    <li>ใช้วัดความสามารถในการค้นหาคลาสบวกทั้งหมด</li>
-                                    <li>ไม่ได้รับผลกระทบจากจำนวน True Negative</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>ไม่ได้พิจารณา False Positive</li>
-                                    <li>อาจทำให้เข้าใจผิดในกรณีที่มี Class Imbalance</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ใช้ในกรณีที่ต้นทุนของ False Negative สูง</li>
-                                    <li>เช่น การตรวจจับการฉ้อโกง (ต้องการตรวจจับการฉ้อโกงให้ได้มากที่สุด)</li>
-                                    <li>การวินิจฉัยโรคร้ายแรง (ต้องการตรวจพบผู้ป่วยที่เป็นโรคให้ได้มากที่สุด)</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <canvas id="recall-chart" width="400" height="200"></canvas>
-                        </div>
-                    </div>
-
-                    <div id="f1-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3">F1-score - รายละเอียด</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> F1-score คือค่าเฉลี่ยฮาร์โมนิกของ Precision และ Recall</p>
-                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">F1 = 2 * (Precision * Recall) / (Precision + Recall)</div>
-                                <p class="text-gray-700 mb-3">โดยที่:</p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>Precision = TP / (TP + FP)</li>
-                                    <li>Recall = TP / (TP + FN)</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ค่า F1-score อยู่ระหว่าง 0 ถึง 1 (หรือ 0% ถึง 100%)</li>
-                                    <li>ค่า F1-score ยิ่งมากยิ่งดี (ค่าสูงสุดคือ 1 หรือ 100%)</li>
-                                    <li>F1-score จะมีค่าสูงเมื่อทั้ง Precision และ Recall มีค่าสูง</li>
-                                    <li>F1-score จะมีค่าต่ำเมื่อ Precision หรือ Recall มีค่าต่ำ</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>พิจารณาทั้ง Precision และ Recall</li>
-                                    <li>เหมาะสำหรับปัญหาที่มีความไม่สมดุลของคลาส</li>
-                                    <li>ให้ความสำคัญกับค่าที่ต่ำระหว่าง Precision และ Recall</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>ไม่ได้พิจารณา True Negative</li>
-                                    <li>ให้น้ำหนักเท่ากันระหว่าง Precision และ Recall</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>การใช้งาน:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ใช้เมื่อต้องการสมดุลระหว่าง Precision และ Recall</li>
-                                    <li>ใช้ในปัญหาที่มีความไม่สมดุลของคลาส</li>
-                                    <li>ใช้เมื่อต้องการเมตริกเดียวที่สะท้อนทั้ง Precision และ Recall</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <canvas id="f1-chart" width="400" height="200"></canvas>
-                        </div>
-                    </div>
-
-                    <div id="roc-detail" class="metric-detail bg-pink-50 p-5 rounded-lg mb-4">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3">ROC-AUC - รายละเอียด</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>คำอธิบาย:</strong> ROC-AUC คือพื้นที่ใต้กราฟ ROC (Receiver Operating Characteristic) ซึ่งแสดงความสัมพันธ์ระหว่าง True Positive Rate (TPR) และ False Positive Rate (FPR) ที่ threshold ต่างๆ</p>
-                                <p class="text-gray-700 mb-3"><strong>สูตร:</strong></p>
-                                <div class="formula mb-3">
-                                    TPR = TP / (TP + FN) = Recall<br>
-                                    FPR = FP / (FP + TN)<br>
-                                    AUC = พื้นที่ใต้กราฟ ROC
-                                </div>
-                                <p class="text-gray-700 mb-3"><strong>การแปลผล:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700">
-                                    <li>ค่า AUC อยู่ระหว่าง 0 ถึง 1</li>
-                                    <li>AUC = 1 หมายถึงโมเดลสามารถแยกคลาสได้อย่างสมบูรณ์</li>
-                                    <li>AUC = 0.5 หมายถึงโมเดลทำนายไม่ดีไปกว่าการสุ่ม</li>
-                                    <li>AUC = 0 หมายถึงโมเดลทำนายผิดทั้งหมด (แต่สามารถกลับการทำนายเพื่อให้ได้ AUC = 1)</li>
-                                </ul>
-                            </div>
-                            <div>
-                                <p class="text-gray-700 mb-3"><strong>ข้อดี:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>ไม่ขึ้นกับ threshold ที่เลือก</li>
-                                    <li>ทนทานต่อความไม่สมดุลของคลาส</li>
-                                    <li>วัดความสามารถในการจัดอันดับของโมเดล</li>
-                                </ul>
-                                <p class="text-gray-700 mb-3"><strong>ข้อเสีย:</strong></p>
-                                <ul class="list-disc pl-5 text-gray-700 mb-3">
-                                    <li>ไม่ได้บอกถึงประสิทธิภาพที่ threshold ใดๆ โดยเฉพาะ</li>
-                                    <li>อาจทำให้เข้าใจผิดในกรณีที่มีความไม่สมดุลของคลาสมาก</li>
-                                </ul><script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'960283a095ff5833',t:'MTc1MjY3OTU0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">03_classification.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">เจาะลึกการวัดผลประสิทธิภาพของโมเดลจำแนกประเภท เช่น Confusion Matrix, Precision, Recall, F1 Score และ ROC Curve</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/03_classification.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/03_classification.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2023 การวัดประสิทธิภาพโมเดล Machine Learning</p>
+        </div>
+    </footer>
+</body>
+</html>

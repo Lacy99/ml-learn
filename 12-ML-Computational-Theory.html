@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทที่ 12: Computational Learning Theory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+        }
+    </style>
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <span class="text-sm font-semibold bg-white/20 py-1 px-3 rounded-full">บทที่ 12</span>
+            <h1 class="text-3xl md:text-4xl font-bold mt-3">Computational Learning Theory</h1>
+            <p class="mt-2 text-teal-100">ทฤษฎีการเรียนรู้เชิงคำนวณและมิติความซับซ้อนของปัญหา</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Section 1: Intro to COLT -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-teal-800 mb-4 border-b-2 border-teal-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center mr-3 font-semibold text-lg">1</span>
+                บทนำสู่ทฤษฎีการเรียนรู้เชิงคำนวณ (Introduction to COLT)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>ทฤษฎีการเรียนรู้เชิงคำนวณ (Computational Learning Theory หรือ COLT)</strong> เป็นการวิเคราะห์หาขอบเขตและข้อจำกัดเชิงคณิตศาสตร์ของความสามารถในการเรียนรู้ของเครื่อง (Machine Learning) โดยมุ่งตอบคำถามหลักว่า:
+            </p>
+            <blockquote class="bg-slate-50 border-l-4 border-teal-500 p-4 rounded-r-xl text-slate-700 italic my-4">
+                "เราต้องการจำนวนตัวอย่างข้อมูลฝึกสอน (Training Data) มากน้อยเพียงใดเพื่อให้โมเดลเรียนรู้แนวคิดเป้าหมายได้อย่างถูกต้อง?"
+            </blockquote>
+        </section>
+
+        <!-- Section 2: PAC Learning -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-teal-800 mb-4 border-b-2 border-teal-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center mr-3 font-semibold text-lg">2</span>
+                การเรียนรู้แบบ PAC (Probably Approximately Correct Learning)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                โมเดล **PAC (Probably Approximately Correct)** ถูกเสนอขึ้นโดย Leslie Valiant เพื่ออธิบายว่าเราไม่สามารถรับประกันความถูกต้องของสมมติฐานได้ 100% เสมอไปเนื่องจากปัญหาความน่าจะเป็น (Probably) แต่เราสามารถกำหนดขอบเขตให้ผลลัพธ์นั้น **"ถูกต้องเกือบทั้งหมด" (Approximately Correct)** ได้อย่างมั่นใจ
+            </p>
+            <p class="text-slate-600 mb-6">
+                โดยกำหนดตัวแปรขอบเขตสำคัญ 2 ตัว:
+            </p>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2 mb-6">
+                <li><strong>$\epsilon$ (Error Parameter):</strong> ตัวชี้วัดสัดส่วนข้อผิดพลาดในการคาดการณ์ของสมมติฐาน ($h$) เมื่อทดสอบกับข้อมูลภายนอก</li>
+                <li><strong>$\delta$ (Confidence Parameter):</strong> ความน่าจะเป็นที่ผลการประเมินจะผิดพลาด หรือสัดส่วนของสภาวะการสุ่มที่เรียนรู้ล้มเหลว ($1 - \delta$ คือความเชื่อมั่นว่าเรียนรู้สำเร็จ)</li>
+            </ul>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">ความซับซ้อนเชิงตัวอย่าง (Sample Complexity)</h3>
+            <p class="text-slate-600 mb-4 text-sm">
+                สำหรับพื้นที่สมมติฐานที่เป็นเซตจำกัด (Finite Hypothesis Space $H$) จำนวนตัวอย่างข้อมูลขั้นต่ำ $m$ ที่เพียงพอในการเรียนรู้แบบ PAC คือ:
+            </p>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-center items-center my-4 font-mono text-lg overflow-x-auto">
+                $$m \ge \frac{1}{\epsilon} \left( \ln |H| + \ln \frac{1}{\delta} \right)$$
+            </div>
+            <p class="text-slate-500 text-xs">
+                *สูตรนี้แสดงว่าจำนวนตัวอย่างที่ต้องการจะเป็นสัดส่วนผกผันกับข้อผิดพลาดที่ยอมรับได้ ($\epsilon$) และเพิ่มขึ้นตามขนาดพื้นที่ตัวเลือกสมมติฐาน ($|H|$)*
+            </p>
+        </section>
+
+        <!-- Section 3: VC Dimension -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-teal-800 mb-4 border-b-2 border-teal-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-600 flex items-center justify-center mr-3 font-semibold text-lg">3</span>
+                มิติ VC (Vapnik-Chervonenkis Dimension)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                ในกรณีที่พื้นที่สมมติฐานมีขนาดเป็นอนันต์ (Infinite Hypothesis Space $H$) เช่น ในกรณีที่พารามิเตอร์เป็นเลขจำนวนจริง เราจะไม่สามารถระบุค่า $|H|$ เป็นตัวเลขจำกัดได้ จึงต้องใช้ **มิติ VC (VC Dimension)** เข้ามาทำหน้าที่วัดความสามารถในการกระจายตัวข้อมูลหรือความเป็นไปได้ของการจัดเรียงตัวแบบต่างๆ
+            </p>
+            <div class="bg-teal-50 p-4 rounded-xl border-l-4 border-teal-500 mb-4">
+                <h3 class="font-bold text-teal-800 mb-2">คำจำกัดความ (Shattering)</h3>
+                <p class="text-slate-700 text-sm leading-relaxed">
+                    เซตของตัวอย่างข้อมูลจะถูก "Shattered" โดยพื้นที่สมมติฐาน $H$ ก็ต่อเมื่อเราสามารถใช้โครงสร้างของ $H$ ในการแยกแยะการจำแนกประเภท (เช่น คลาสบวกและคลาสลบ) ในรูปแบบที่เป็นไปได้ทั้งหมด ($2^d$ รูปแบบ สำหรับจุดข้อมูลจำนวน $d$ จุด)
+                </p>
+            </div>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                **มิติ VC (VC Dimension)** ของพื้นที่สมมติฐาน $H$ คือจำนวนจุดข้อมูลสูงสุดที่สามารถถูก Shattered ได้โดย $H$ ยกตัวอย่างเช่น:
+            </p>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2">
+                <li>เส้นตรง 2 มิติ (Linear Separator) มีมิติ VC เท่ากับ 3 จุดข้อมูล (ไม่สามารถ Shattered 4 จุดที่เรียงตัวเป็นรูปกากบาทแบบสลับคลาสได้)</li>
+                <li>ไฮเปอร์เพลน $N$ มิติ มีมิติ VC เท่ากับ $N + 1$</li>
+            </ul>
+        </section>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">04_training_linear_models.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">ศึกษาพฤติกรรมของโมเดล การเกิด Overfitting/Underfitting ผ่านการพล็อตเส้นโค้งการเรียนรู้ (Learning Curves) และการควบคุมความซับซ้อน</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/04_training_linear_models.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/04_training_linear_models.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12 text-center text-sm">
+        <p>&copy; 2023 ML Learn by Anusorn Chaikaew</p>
+    </footer>
+
+</body>
+</html>

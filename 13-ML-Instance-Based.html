@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทที่ 13: Instance-Based Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        }
+    </style>
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <span class="text-sm font-semibold bg-white/20 py-1 px-3 rounded-full">บทที่ 13</span>
+            <h1 class="text-3xl md:text-4xl font-bold mt-3">Instance-Based Learning</h1>
+            <p class="mt-2 text-pink-100">การเรียนรู้โดยตัวอย่างและขั้นตอนวิธีแบบเกียจคร้าน (Lazy Learning)</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Section 1: Introduction -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-pink-800 mb-4 border-b-2 border-pink-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center mr-3 font-semibold text-lg">1</span>
+                การเรียนรู้โดยตัวอย่าง (Instance-Based Learning)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>การเรียนรู้โดยตัวอย่าง (Instance-Based Learning)</strong> คือกลุ่มของอัลกอริทึมที่จะ "ไม่สร้างโมเดลใดๆ" ขึ้นมาล่วงหน้าในระหว่างการประเมินข้อมูลฝึกสอน (Training Phase) แต่จะใช้วิธี **จัดเก็บข้อมูลตัวอย่าง** ทั้งหมดลงในหน่วยความจำโดยตรง และจะเริ่มประมวลผลคำนวณเมื่อมี "ข้อมูลใหม่" (Query Instance) ส่งเข้ามาวิเคราะห์เท่านั้น
+            </p>
+            <div class="bg-slate-50 p-4 rounded-xl border-l-4 border-pink-500 mb-4">
+                <h3 class="font-bold text-slate-800 mb-2">การเรียนรู้แบบขี้เกียจ (Lazy Learning)</h3>
+                <p class="text-slate-600 text-sm">
+                    มีศัพท์เฉพาะเรียกกลุ่มโมเดลจำพวกนี้ว่า "Lazy Learners" เนื่องจากมีขั้นตอนการประเมินหรือจัดเตรียมการตัดสินใจที่เรียบง่าย แต่มีภาระหนักในช่วงทำนาย (Query time) เพราะต้องนำข้อมูลใหม่ไปเปรียบเทียบระยะห่างกับข้อมูลตัวอย่างทั้งหมดในคลังเก็บ
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 2: k-NN -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-pink-800 mb-4 border-b-2 border-pink-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center mr-3 font-semibold text-lg">2</span>
+                ขั้นตอนวิธีเพื่อนบ้านใกล้ที่สุด k ตัว (k-Nearest Neighbors)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                อัลกอริทึม **k-NN** เป็นอัลกอริทึมของ Instance-Based Learning ที่เข้าใจง่ายและทำงานได้ผลลัพธ์น่าพอใจ โดยขั้นตอนวิธีการทำงานคือ:
+            </p>
+            <ol class="list-decimal pl-6 text-slate-600 space-y-2 mb-6 text-sm">
+                <li>เลือกจำนวนเพื่อนบ้านใกล้ที่สุด ($k$ ตัวอย่าง)</li>
+                <li>คำนวณระยะห่างระหว่างจุดของข้อมูลใหม่ และจุดข้อมูลฝึกสอนทั้งหมดในระบบ</li>
+                <li>จัดลำดับความใกล้ตามระยะห่างที่คำนวณได้ และดึงข้อมูลที่ใกล้ที่สุดจำนวน $k$ จุดขึ้นมา</li>
+                <li>ลงมติเลือกกลุ่มคลาสส่วนใหญ่ (Majority Vote) สำหรับงานจำแนกคลาส หรือเฉลี่ยผลรวม (Average) สำหรับงานทำนายค่าตัวเลข</li>
+            </ol>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">สูตรการคำนวณระยะห่างทางคณิตศาสตร์</h3>
+            <p class="text-slate-600 mb-4 text-sm">
+                เราสามารถคำนวณความใกล้ชิดหรือระยะห่างได้ด้วยวิธีหลักๆ ดังนี้:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- Euclidean Distance -->
+                <div class="border border-slate-100 p-4 rounded-xl bg-slate-50">
+                    <h4 class="font-bold text-pink-700 mb-2">1. Euclidean Distance (แนวเส้นตรง)</h4>
+                    <div class="font-mono text-sm py-2">
+                        $$d(x, y) = \sqrt{\sum_{i=1}^{n} (x_i - y_i)^2}$$
+                    </div>
+                </div>
+                <!-- Manhattan Distance -->
+                <div class="border border-slate-100 p-4 rounded-xl bg-slate-50">
+                    <h4 class="font-bold text-pink-700 mb-2">2. Manhattan Distance (ตารางบล็อกเมือง)</h4>
+                    <div class="font-mono text-sm py-2">
+                        $$d(x, y) = \sum_{i=1}^{n} |x_i - y_i|$$
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive k-NN Simulator -->
+            <div class="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                <h3 class="font-bold text-pink-900 text-lg mb-4 text-center">🎯 เครื่องจำลองอัลกอริทึม k-NN (Interactive k-NN Plotter)</h3>
+                <p class="text-slate-600 text-sm text-center mb-6">คลิกบนกระดานด้านล่างเพื่อวาดข้อมูลตัวอย่าง (ส้ม/ชมพู) จากนั้นเลือกจุดสอบถาม (เขียว) เพื่อดูการจำแนกประเภทตามเพื่อนบ้านใกล้ที่สุด</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Controls -->
+                    <div class="space-y-4">
+                        <div>
+                            <span class="block text-sm font-semibold text-slate-700 mb-2">1. เลือกประเภทจุดที่จะวาด:</span>
+                            <div class="flex flex-col space-y-2">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="point-type" value="orange" checked class="w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300">
+                                    <span class="ml-2 text-sm text-slate-700 flex items-center">
+                                        <span class="w-3 h-3 rounded-full bg-orange-500 mr-2"></span> คลาส A (ส้ม)
+                                    </span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="point-type" value="pink" class="w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300">
+                                    <span class="ml-2 text-sm text-slate-700 flex items-center">
+                                        <span class="w-3 h-3 rounded-full bg-pink-500 mr-2"></span> คลาส B (ชมพู)
+                                    </span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="point-type" value="query" class="w-4 h-4 text-pink-600 focus:ring-pink-500 border-slate-300">
+                                    <span class="ml-2 text-sm text-slate-700 flex items-center">
+                                        <span class="w-3 h-3 rounded-full bg-emerald-500 mr-2"></span> จุดสอบถาม (Query - เขียว)
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-1">
+                                <span>2. เลือกค่า $k$ (เพื่อนบ้านใกล้สุด):</span>
+                                <span id="k-display" class="text-pink-600 font-bold">3</span>
+                            </div>
+                            <input type="range" id="k-slider" min="1" max="9" step="2" value="3" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pink-600">
+                            <span class="text-[10px] text-slate-400 block mt-1">*ควรเลือกเป็นเลขคี่เพื่อป้องกันการเสมอ*</span>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+                            <div class="font-bold text-slate-800 text-sm mb-1">ผลการลงมติ:</div>
+                            <div id="vote-output" class="text-slate-500 italic">กรุณาวางจุดสีเขียวบนกระดาน...</div>
+                        </div>
+
+                        <button id="clear-btn" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                            ล้างหน้าจอ
+                        </button>
+                    </div>
+
+                    <!-- Canvas Area -->
+                    <div class="md:col-span-2">
+                        <canvas id="knn-canvas" width="480" height="320" class="w-full border border-slate-300 rounded-xl bg-white cursor-crosshair shadow-inner"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const canvas = document.getElementById("knn-canvas");
+                    const ctx = canvas.getContext("2d");
+                    const kSlider = document.getElementById("k-slider");
+                    const kDisplay = document.getElementById("k-display");
+                    const voteOutput = document.getElementById("vote-output");
+                    const clearBtn = document.getElementById("clear-btn");
+
+                    let points = [
+                        {x: 80, y: 120, type: 'orange'},
+                        {x: 120, y: 80, type: 'orange'},
+                        {x: 100, y: 150, type: 'orange'},
+                        {x: 150, y: 180, type: 'orange'},
+                        {x: 350, y: 220, type: 'pink'},
+                        {x: 380, y: 180, type: 'pink'},
+                        {x: 320, y: 250, type: 'pink'},
+                        {x: 280, y: 190, type: 'pink'}
+                    ];
+                    let queryPoint = {x: 200, y: 160};
+
+                    function getSelectedType() {
+                        return document.querySelector('input[name="point-type"]:checked').value;
+                    }
+
+                    function calculateDistances() {
+                        if (!queryPoint) return [];
+                        return points.map(p => {
+                            const dx = p.x - queryPoint.x;
+                            const dy = p.y - queryPoint.y;
+                            const dist = Math.sqrt(dx*dx + dy*dy);
+                            return { ...p, dist };
+                        }).sort((a, b) => a.dist - b.dist);
+                    }
+
+                    function draw() {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        // Draw Grid Lines (light)
+                        ctx.strokeStyle = "#f1f5f9";
+                        ctx.lineWidth = 1;
+                        for(let x=20; x<canvas.width; x+=20) {
+                            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                        }
+                        for(let y=20; y<canvas.height; y+=20) {
+                            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                        }
+
+                        const k = parseInt(kSlider.value);
+                        const sortedPoints = calculateDistances();
+
+                        // Draw Lines to k-NN
+                        if (queryPoint && sortedPoints.length >= k) {
+                            ctx.strokeStyle = "#e2e8f0";
+                            ctx.lineWidth = 1.5;
+                            for (let i = 0; i < k; i++) {
+                                ctx.beginPath();
+                                ctx.moveTo(queryPoint.x, queryPoint.y);
+                                ctx.lineTo(sortedPoints[i].x, sortedPoints[i].y);
+                                ctx.stroke();
+                            }
+                        }
+
+                        // Draw Points
+                        points.forEach(p => {
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+                            ctx.fillStyle = p.type === 'orange' ? '#f97316' : '#ec4899';
+                            ctx.fill();
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 1.5;
+                            ctx.stroke();
+                        });
+
+                        // Draw Query Point
+                        if (queryPoint) {
+                            ctx.beginPath();
+                            ctx.arc(queryPoint.x, queryPoint.y, 9, 0, Math.PI * 2);
+                            ctx.fillStyle = '#10b981';
+                            ctx.fill();
+                            ctx.strokeStyle = '#ffffff';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+
+                            // Highlight nearest points
+                            for (let i = 0; i < Math.min(k, sortedPoints.length); i++) {
+                                ctx.beginPath();
+                                ctx.arc(sortedPoints[i].x, sortedPoints[i].y, 11, 0, Math.PI * 2);
+                                ctx.strokeStyle = '#64748b';
+                                ctx.lineWidth = 1;
+                                ctx.setLineDash([2, 2]);
+                                ctx.stroke();
+                                ctx.setLineDash([]);
+                            }
+                        }
+
+                        // Process Votes
+                        if (queryPoint && sortedPoints.length > 0) {
+                            const nearest = sortedPoints.slice(0, k);
+                            let orangeVotes = 0;
+                            let pinkVotes = 0;
+                            nearest.forEach(n => {
+                                if (n.type === 'orange') orangeVotes++;
+                                else pinkVotes++;
+                            });
+
+                            let winner = orangeVotes > pinkVotes ? 'คลาส A (ส้ม)' : 'คลาส B (ชมพู)';
+                            voteOutput.innerHTML = `
+                                <div class="font-bold text-slate-800 text-sm mt-1">คลาส A (ส้ม): <span class="text-orange-500">${orangeVotes}</span></div>
+                                <div class="font-bold text-slate-800 text-sm">คลาส B (ชมพู): <span class="text-pink-500">${pinkVotes}</span></div>
+                                <div class="mt-2 pt-2 border-t border-slate-100 font-semibold text-slate-700">คำทำนาย: <span class="${orangeVotes > pinkVotes ? 'text-orange-600' : 'text-pink-600'}">${winner}</span></div>
+                            `;
+                        } else {
+                            voteOutput.textContent = "กรุณาวางจุดอย่างน้อย 1 จุด...";
+                        }
+                    }
+
+                    canvas.addEventListener("click", function(e) {
+                        const rect = canvas.getBoundingClientRect();
+                        const scaleX = canvas.width / rect.width;
+                        const scaleY = canvas.height / rect.height;
+                        const x = (e.clientX - rect.left) * scaleX;
+                        const y = (e.clientY - rect.top) * scaleY;
+
+                        const type = getSelectedType();
+                        if (type === 'query') {
+                            queryPoint = { x, y };
+                        } else {
+                            points.push({ x, y, type });
+                        }
+                        draw();
+                    });
+
+                    kSlider.addEventListener("input", function() {
+                        kDisplay.textContent = kSlider.value;
+                        draw();
+                    });
+
+                    clearBtn.addEventListener("click", function() {
+                        points = [];
+                        queryPoint = null;
+                        draw();
+                    });
+
+                    draw();
+                });
+            </script>
+        </section>
+
+        <!-- Section 3: Locally Weighted & CBR -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-pink-800 mb-4 border-b-2 border-pink-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center mr-3 font-semibold text-lg">3</span>
+                Locally Weighted Regression & Case-Based Reasoning
+            </h2>
+
+            <h3 class="font-bold text-slate-800 text-lg mb-2">การถดถอยถ่วงน้ำหนักเฉพาะส่วน (Locally Weighted Regression)</h3>
+            <p class="text-slate-600 leading-relaxed mb-6 text-sm">
+                เป็นการประยุกต์ใช้ Linear Regression ร่วมกับแนวคิดแบบใกล้เคียง โดยการคำนวณเส้นสัมผัสเพื่อทำนายบริเวณจุดเป้าหมายจากเพื่อนบ้านบริเวณนั้น ๆ โดนให้น้ำหนักความสำคัญกับข้อมูลฝึกสอนที่ใกล้เคียงสูงกว่าจุดที่อยู่ห่างไกลออกไป
+            </p>
+
+            <h3 class="font-bold text-slate-800 text-lg mb-2">การให้เหตุผลตามกรณี (Case-Based Reasoning หรือ CBR)</h3>
+            <p class="text-slate-600 leading-relaxed mb-4 text-sm">
+                CBR เป็นการประยุกต์ใช้แนวคิด Instance-based Learning ในระดับโครงสร้างที่ซับซ้อนขึ้น มักพบในปัญญาประดิษฐ์เชิงเหตุและผล โดยมีกระบวนการ 4 อย่าง (4R Cycle):
+            </p>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2 text-sm">
+                <li><strong>Retrieve (การสืบค้น):</strong> ค้นหาตัวอย่างกรณีปัญหาเดิมที่ใกล้เคียงกับปัญหาปัจจุบันที่สุด</li>
+                <li><strong>Reuse (การนำกลับมาใช้ใหม่):</strong> นำแนวทางแก้ไขปัญหากรณีเดิมมาประยุกต์ใช้งาน</li>
+                <li><strong>Revise (การปรับปรุงแก้ไข):</strong> ทดลองวิเคราะห์และปรับเปลี่ยนทิศทางผลลัพธ์ให้พอดีกับเงื่อนไขใหม่</li>
+                <li><strong>Retain (การเก็บรักษา):</strong> จัดเก็บบันทึกวิธีแก้ปัญหาล่าสุดลงระบบเพื่อใช้เป็นเคสตัวอย่างใหม่ครั้งถัดไป</li>
+            </ul>
+        </section>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">03_classification.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">ฝึกฝนการใช้งานอัลกอริทึมจำแนกประเภทแบบอิงตามตัวอย่าง เช่น k-Nearest Neighbors (k-NN) สำหรับปัญหา Classification</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/03_classification.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/03_classification.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12 text-center text-sm">
+        <p>&copy; 2023 ML Learn by Anusorn Chaikaew</p>
+    </footer>
+
+</body>
+</html>

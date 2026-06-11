@@ -18,8 +18,25 @@
         .connection { stroke: #6b7280; stroke-width: 2; }
         .weight-label { font-size: 12px; fill: #374151; }
     </style>
+
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+
 </head>
 <body class="bg-gray-50">
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
     <!-- Header -->
     <div class="gradient-bg text-white py-16">
         <div class="container mx-auto px-6 text-center">
@@ -59,7 +76,7 @@
                         
                         <div class="math-formula p-4 rounded-lg mb-4">
                             <h4 class="font-semibold mb-2">สูตรการคำนวณ:</h4>
-                            <p class="font-mono">y = f(Σ(wi × xi) + b)</p>
+                            <p class="font-mono">$$y = f\left(\sum_{i} (w_i \times x_i) + b\right)$$</p>
                             <p class="text-sm text-gray-600 mt-2">
                                 โดย wi = น้ำหนัก, xi = input, b = bias, f = activation function
                             </p>
@@ -116,7 +133,7 @@
                         
                         <div class="step-box p-4 rounded-lg mb-4">
                             <h4 class="font-semibold text-green-700 mb-2">ขั้นตอนที่ 2: คำนวณผลรวมถ่วงน้ำหนัก</h4>
-                            <p class="font-mono">z = (w₁ × x₁) + (w₂ × x₂) + b</p>
+                            <p class="font-mono">$$z = (w_1 \times x_1) + (w_2 \times x_2) + b$$</p>
                             <p class="font-mono">z = (<span id="calc-w1">0.3</span> × <span id="calc-x1">0.5</span>) + (<span id="calc-w2">0.7</span> × <span id="calc-x2">0.8</span>) + <span id="calc-b">-0.2</span></p>
                             <p class="font-mono">z = <span id="result-z">0.41</span></p>
                         </div>
@@ -278,19 +295,19 @@
                             
                             <div class="bg-gray-50 p-3 rounded mb-2">
                                 <p class="font-semibold text-sm">Hidden Layer:</p>
-                                <p class="font-mono text-sm">h₁ = σ(0.2×0.5 + 0.4×0.8 + 0.1) = σ(0.52) = 0.627</p>
-                                <p class="font-mono text-sm">h₂ = σ(0.3×0.5 + 0.6×0.8 + 0.2) = σ(0.83) = 0.696</p>
+                                <p class="font-mono text-sm">$$h_1 = \sigma(0.2 \times 0.5 + 0.4 \times 0.8 + 0.1) = \sigma(0.52) \approx 0.627$$</p>
+                                <p class="font-mono text-sm">$$h_2 = \sigma(0.3 \times 0.5 + 0.6 \times 0.8 + 0.2) = \sigma(0.83) \approx 0.696$$</p>
                             </div>
                             
                             <div class="bg-gray-50 p-3 rounded">
                                 <p class="font-semibold text-sm">Output Layer:</p>
-                                <p class="font-mono text-sm">y = σ(0.5×0.627 + 0.7×0.696 + 0.1) = σ(0.901) = 0.711</p>
+                                <p class="font-mono text-sm">$$y = \sigma(0.5 \times 0.627 + 0.7 \times 0.696 + 0.1) = \sigma(0.901) \approx 0.711$$</p>
                             </div>
                         </div>
                         
                         <div class="math-formula p-4 rounded-lg">
                             <h4 class="font-semibold mb-2">Sigmoid Activation Function:</h4>
-                            <p class="font-mono">σ(x) = 1 / (1 + e^(-x))</p>
+                            <p class="font-mono">$$\sigma(x) = \frac{1}{1 + e^{-x}}$$</p>
                             <p class="text-sm text-gray-600 mt-2">
                                 ให้ค่าระหว่าง 0 ถึง 1 และมีความต่อเนื่อง
                             </p>
@@ -330,7 +347,7 @@
                         
                         <div class="math-formula p-4 rounded-lg mb-4">
                             <h4 class="font-semibold mb-2">สูตรการอัปเดต Weight:</h4>
-                            <p class="font-mono">w_new = w_old - α × ∂E/∂w</p>
+                            <p class="font-mono">$$w_{\text{new}} = w_{\text{old}} - \alpha \times \frac{\partial E}{\partial w}$$</p>
                             <p class="text-sm text-gray-600 mt-2">
                                 α = learning rate, ∂E/∂w = gradient ของ error
                             </p>
@@ -380,7 +397,7 @@
                         <h4 class="font-semibold text-green-700 mb-2">2. Calculate Error</h4>
                         <p class="text-sm">คำนวณความผิดพลาดระหว่าง output และ target</p>
                         <div class="mt-2 p-2 bg-gray-50 rounded text-xs font-mono">
-                            Error = (target - output)²
+                            $$Error = (\text{target} - \text{output})^2$$
                         </div>
                     </div>
                     
@@ -487,6 +504,27 @@
             </div>
         </div>
     </div>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">10_neural_nets_with_keras.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">เริ่มต้นก้าวเข้าสู่ Deep Learning ด้วยการสร้างโมเดล Artificial Neural Networks (ANNs) โดยใช้ Keras และ TensorFlow</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/10_neural_nets_with_keras.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/10_neural_nets_with_keras.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
 
     <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8 mt-16">
@@ -904,5 +942,5 @@
             showActivation('sigmoid');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97268b8d44277b4c',t:'MTc1NTc0MTcxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>

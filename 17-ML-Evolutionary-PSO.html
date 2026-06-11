@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทที่ 17: Evolutionary Algorithms & PSO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+        }
+    </style>
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <span class="text-sm font-semibold bg-white/20 py-1 px-3 rounded-full">บทที่ 17</span>
+            <h1 class="text-3xl md:text-4xl font-bold mt-3">Evolutionary Algorithms & PSO</h1>
+            <p class="mt-2 text-rose-100">ขั้นตอนวิธีเชิงวิวัฒน์และการหาคำตอบที่เหมาะสมที่สุดด้วยวิธีกลุ่มอนุภาค</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Section 1: Evolutionary Algorithms -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-rose-800 mb-4 border-b-2 border-rose-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center mr-3 font-semibold text-lg">1</span>
+                ขั้นตอนวิธีเชิงวิวัฒน์ (Evolutionary Algorithms)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>ขั้นตอนวิธีเชิงวิวัฒน์ (Evolutionary Algorithms หรือ EA)</strong> คือกลุ่มของอัลกอริทึมที่ใช้หลักการคัดเลือกตามธรรมชาติและการสืบพันธุ์ของสิ่งมีชีวิตมาแก้ปัญหาการค้นหาตัวเลือกที่ดีที่สุด (Optimization Problems) โดยตัวแทนที่พบบ่อยที่สุดคือ **Genetic Algorithm (GA)**
+            </p>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">กระบวนการสำคัญใน Genetic Algorithm (GA)</h3>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2 mb-6 text-sm">
+                <li><strong>Initialization:</strong> สุ่มสร้างกลุ่มประชากรเริ่มต้น (แทนคำตอบในรูปของโครโมโซม)</li>
+                <li><strong>Evaluation (Fitness Function):</strong> ประเมินความเหมาะสมของแต่ละโครโมโซมว่าแก้ปัญหาได้ดีระดับใด</li>
+                <li><strong>Selection:</strong> คัดเลือกโครโมโซมที่แข็งแกร่ง (คะแนน Fitness สูง) เพื่อนำไปสืบพันธุ์ในรุ่นต่อไป</li>
+                <li><strong>Crossover (การผสมข้ามสายพันธุ์):</strong> นำโครโมโซมพ่อและแม่มาแลกเปลี่ยนยีนเพื่อสร้างโครโมโซมลูกตัวใหม่</li>
+                <li><strong>Mutation (การกลายพันธุ์):</strong> สุ่มเปลี่ยนแปลงยีนบางตำแหน่งเพื่อป้องกันความจำเจและขยายขอบเขตการค้นหาข้อมูลใหม่</li>
+            </ul>
+        </section>
+
+        <!-- Section 2: PSO -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-rose-800 mb-4 border-b-2 border-rose-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center mr-3 font-semibold text-lg">2</span>
+                การหาคำตอบที่เหมาะสมที่สุดด้วยวิธีกลุ่มอนุภาค (Particle Swarm Optimization)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                **Particle Swarm Optimization (PSO)** ได้แรงบันดาลใจมาจากพฤติกรรมการเคลื่อนที่หาอาหารของฝูงนกหรือฝูงปลา (Swarm Intelligence) โดยจะสมมติคำตอบให้เป็นอนุภาค **(Particle)** ที่บินไปในพื้นที่ค้นหาเพื่อหาจุดที่ดีที่สุด โดยแต่ละอนุภาคจะจำค่า 2 อย่าง:
+            </p>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2 mb-6 text-sm">
+                <li><strong>$pbest_i$ (Personal Best):</strong> ตำแหน่งที่ดีที่สุดที่อนุภาคตัวนั้น ๆ เคยเดินทางไปพบด้วยตัวเอง</li>
+                <li><strong>$gbest$ (Global Best):</strong> ตำแหน่งที่ดีที่สุดที่สมาชิกทุกคนในกลุ่มฝูง (Swarm) เคยไปพบร่วมกัน</li>
+            </ul>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">สมการคณิตศาสตร์ที่ใช้ปรับความเร็วและทิศทางของอนุภาค</h3>
+            <p class="text-slate-600 mb-4 text-sm">
+                ในแต่ละรอบการบิน อนุภาค $i$ จะอัปเดตความเร็วและพิกัดตำแหน่งใหม่ดังนี้:
+            </p>
+
+            <!-- Speed update -->
+            <div class="border-l-4 border-rose-500 bg-slate-50 p-4 rounded-r-xl mb-4">
+                <h4 class="font-bold text-slate-800 text-sm mb-2">1. การคำนวณความเร็วใหม่ (Velocity Update)</h4>
+                <div class="font-mono text-sm overflow-x-auto py-2">
+                    $$v_i(t+1) = w v_i(t) + c_1 r_1 (pbest_i - x_i(t)) + c_2 r_2 (gbest - x_i(t))$$
+                </div>
+                <p class="text-slate-500 text-xs mt-2 leading-relaxed">
+                    *โดยที่ $w$ คือค่าความเฉื่อย, $c_1, c_2$ คือสัมประสิทธิ์การเรียนรู้ส่วนบุคคลและสังคม, $r_1, r_2$ คือตัวเลขสุ่มระหว่าง 0 ถึง 1*
+                </p>
+            </div>
+
+            <!-- Position update -->
+            <div class="border-l-4 border-rose-500 bg-slate-50 p-4 rounded-r-xl mb-4">
+                <h4 class="font-bold text-slate-800 text-sm mb-2">2. การคำนวณตำแหน่งพิกัดใหม่ (Position Update)</h4>
+                <div class="font-mono text-sm overflow-x-auto py-2">
+                    $$x_i(t+1) = x_i(t) + v_i(t+1)$$
+                </div>
+            </div>
+
+            <!-- Interactive PSO Visualizer -->
+            <div class="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                <h3 class="font-bold text-rose-900 text-lg mb-4 text-center">🎯 เครื่องจำลองการบินของฝูงอนุภาค (PSO Swarm Simulator)</h3>
+                <p class="text-slate-600 text-sm text-center mb-6">คลิกหรือลากย้ายเป้าหมาย (สีเขียว 🎯) บนบอร์ด เพื่อดูฝูงอนุภาคบินปรับทิศทางบินเข้าหาเป้าหมาย คุณสามารถปรับตัวแปรการบินด้วยสไลเดอร์ด้านซ้าย</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Controls -->
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-1">
+                                <span>1. ค่าความเฉื่อย ($w$):</span>
+                                <span id="w-display" class="text-rose-600 font-bold">0.5</span>
+                            </div>
+                            <input type="range" id="w-slider" min="0.1" max="1.0" step="0.05" value="0.5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-1">
+                                <span>2. แรงส่วนบุคคล ($c_1$):</span>
+                                <span id="c1-display" class="text-rose-600 font-bold">1.5</span>
+                            </div>
+                            <input type="range" id="c1-slider" min="0.1" max="3.0" step="0.1" value="1.5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-sm font-semibold text-slate-700 mb-1">
+                                <span>3. แรงกลุ่มสังคม ($c_2$):</span>
+                                <span id="c2-display" class="text-rose-600 font-bold">1.5</span>
+                            </div>
+                            <input type="range" id="c2-slider" min="0.1" max="3.0" step="0.1" value="1.5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+                        </div>
+
+                        <div class="flex space-x-2 pt-2">
+                            <button id="pso-play-btn" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                                Pause
+                            </button>
+                            <button id="pso-reset-btn" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                                Reset Swarm
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Area -->
+                    <div class="md:col-span-2">
+                        <canvas id="pso-canvas" width="480" height="320" class="w-full border border-slate-300 rounded-xl bg-slate-950 cursor-crosshair shadow-inner"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const canvas = document.getElementById("pso-canvas");
+                    const ctx = canvas.getContext("2d");
+                    const wSlider = document.getElementById("w-slider");
+                    const wDisplay = document.getElementById("w-display");
+                    const c1Slider = document.getElementById("c1-slider");
+                    const c1Display = document.getElementById("c1-display");
+                    const c2Slider = document.getElementById("c2-slider");
+                    const c2Display = document.getElementById("c2-display");
+                    const psoPlayBtn = document.getElementById("pso-play-btn");
+                    const psoResetBtn = document.getElementById("pso-reset-btn");
+
+                    let target = { x: 240, y: 160 };
+                    let particles = [];
+                    const numParticles = 30;
+                    let animationId = null;
+                    let isPlaying = true;
+
+                    // Initialize particles
+                    function initParticles() {
+                        particles = [];
+                        for (let i = 0; i < numParticles; i++) {
+                            const x = Math.random() * canvas.width;
+                            const y = Math.random() * canvas.height;
+                            particles.push({
+                                x: x,
+                                y: y,
+                                vx: (Math.random() - 0.5) * 10,
+                                vy: (Math.random() - 0.5) * 10,
+                                pbestX: x,
+                                pbestY: y,
+                                pbestVal: Infinity
+                            });
+                        }
+                    }
+
+                    function updateSwarm() {
+                        const w = parseFloat(wSlider.value);
+                        const c1 = parseFloat(c1Slider.value);
+                        const c2 = parseFloat(c2Slider.value);
+
+                        // Find global best (gbest)
+                        let gbestX = target.x;
+                        let gbestY = target.y;
+                        let gbestVal = Infinity;
+
+                        // Evaluate fitness and update pbest
+                        particles.forEach(p => {
+                            const dx = p.x - target.x;
+                            const dy = p.y - target.y;
+                            const dist = dx*dx + dy*dy; // Fitness: squared distance
+                            
+                            if (dist < p.pbestVal) {
+                                p.pbestVal = dist;
+                                p.pbestX = p.x;
+                                p.pbestY = p.y;
+                            }
+
+                            if (dist < gbestVal) {
+                                gbestVal = dist;
+                                gbestX = p.x;
+                                gbestY = p.y;
+                            }
+                        });
+
+                        // Update velocities and positions
+                        particles.forEach(p => {
+                            const r1 = Math.random();
+                            const r2 = Math.random();
+
+                            p.vx = w * p.vx + c1 * r1 * (p.pbestX - p.x) + c2 * r2 * (gbestX - p.x);
+                            p.vy = w * p.vy + c1 * r2 * (p.pbestY - p.y) + c2 * r2 * (gbestY - p.y);
+
+                            // Clamp velocity to prevent particles flying off too fast
+                            const maxV = 15;
+                            const speed = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+                            if (speed > maxV) {
+                                p.vx = (p.vx / speed) * maxV;
+                                p.vy = (p.vy / speed) * maxV;
+                            }
+
+                            p.x += p.vx;
+                            p.y += p.vy;
+                        });
+                    }
+
+                    function draw() {
+                        // Trail effect (semi-transparent clear rect)
+                        ctx.fillStyle = "rgba(2, 6, 23, 0.3)";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        // Draw Target
+                        ctx.beginPath();
+                        ctx.arc(target.x, target.y, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = "#10b981";
+                        ctx.fill();
+                        ctx.strokeStyle = "#ffffff";
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+
+                        // Target crosshair lines
+                        ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(target.x - 15, target.y); ctx.lineTo(target.x + 15, target.y);
+                        ctx.moveTo(target.x, target.y - 15); ctx.lineTo(target.x, target.y + 15);
+                        ctx.stroke();
+
+                        // Draw Particles
+                        particles.forEach(p => {
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+                            ctx.fillStyle = "#f43f5e"; // Rose color
+                            ctx.fill();
+
+                            // Velocity tail lines
+                            ctx.strokeStyle = "rgba(244, 63, 94, 0.5)";
+                            ctx.lineWidth = 1.5;
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p.x - p.vx * 1.5, p.y - p.vy * 1.5);
+                            ctx.stroke();
+                        });
+                    }
+
+                    function loop() {
+                        if (isPlaying) {
+                            updateSwarm();
+                            draw();
+                        }
+                        animationId = requestAnimationFrame(loop);
+                    }
+
+                    function handleCanvasInteraction(e) {
+                        const rect = canvas.getBoundingClientRect();
+                        const scaleX = canvas.width / rect.width;
+                        const scaleY = canvas.height / rect.height;
+                        target.x = (e.clientX - rect.left) * scaleX;
+                        target.y = (e.clientY - rect.top) * scaleY;
+                        if (!isPlaying) {
+                            draw();
+                        }
+                    }
+
+                    // Mouse Events for dragging Target
+                    let isMouseDown = false;
+                    canvas.addEventListener("mousedown", function(e) {
+                        isMouseDown = true;
+                        handleCanvasInteraction(e);
+                    });
+                    canvas.addEventListener("mousemove", function(e) {
+                        if (isMouseDown) {
+                            handleCanvasInteraction(e);
+                        }
+                    });
+                    window.addEventListener("mouseup", function() {
+                        isMouseDown = false;
+                    });
+
+                    // Touch Events for mobile support
+                    canvas.addEventListener("touchstart", function(e) {
+                        if (e.touches.length === 1) {
+                            isMouseDown = true;
+                            handleCanvasInteraction(e.touches[0]);
+                        }
+                    });
+                    canvas.addEventListener("touchmove", function(e) {
+                        if (isMouseDown && e.touches.length === 1) {
+                            handleCanvasInteraction(e.touches[0]);
+                        }
+                    });
+                    canvas.addEventListener("touchend", function() {
+                        isMouseDown = false;
+                    });
+
+                    // Slider Displays
+                    wSlider.addEventListener("input", () => wDisplay.textContent = wSlider.value);
+                    c1Slider.addEventListener("input", () => c1Display.textContent = c1Slider.value);
+                    c2Slider.addEventListener("input", () => c2Display.textContent = c2Slider.value);
+
+                    psoPlayBtn.addEventListener("click", function() {
+                        isPlaying = !isPlaying;
+                        psoPlayBtn.textContent = isPlaying ? "Pause" : "Play";
+                    });
+
+                    psoResetBtn.addEventListener("click", function() {
+                        initParticles();
+                        if (!isPlaying) {
+                            draw();
+                        }
+                    });
+
+                    initParticles();
+                    loop();
+                });
+            </script>
+        </section>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">extra_gradient_descent_comparison.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">เปรียบเทียบประสิทธิภาพและการทำงานของวิธีการหาค่าที่เหมาะสมที่สุด (Optimization) แบบต่างๆ ในการฝึกฝนโมเดล</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/extra_gradient_descent_comparison.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/extra_gradient_descent_comparison.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12 text-center text-sm">
+        <p>&copy; 2023 ML Learn by Anusorn Chaikaew</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บทที่ 16: Reinforcement Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f8fafc;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
+    </style>
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+
+    <!-- Floating Back to Home Button -->
+    <div class="fixed top-4 left-4 z-50">
+        <a href="index.html" class="flex items-center space-x-2 bg-white/90 backdrop-blur-sm text-indigo-600 hover:text-indigo-800 px-4 py-2 rounded-full shadow-md border border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="font-medium text-sm text-indigo-600">กลับสู่สารบัญ</span>
+        </a>
+    </div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <span class="text-sm font-semibold bg-white/20 py-1 px-3 rounded-full">บทที่ 16</span>
+            <h1 class="text-3xl md:text-4xl font-bold mt-3">Reinforcement Learning</h1>
+            <p class="mt-2 text-emerald-100">การเรียนรู้เสริมความแกร่งและสภาวะแวดล้อมเชิงตอบรับ</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Section 1: Introduction to RL -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-emerald-800 mb-4 border-b-2 border-emerald-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 font-semibold text-lg">1</span>
+                การเรียนรู้เสริมความแกร่ง (Reinforcement Learning)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                <strong>การเรียนรู้เสริมความแกร่ง (Reinforcement Learning)</strong> แตกต่างจากแนวทางการเรียนรู้แบบอื่น ๆ เพราะโมเดลไม่ได้ถูกสอนด้วยคู่คำตอบสำเร็จรูป แต่จะใช้วิธีให้โมเดลจำลองตัวตนเป็นตัวแทนกระทำ **(Agent)** ลงไปทดลองแก้ปัญหาในสภาพแวดล้อม **(Environment)** จริง และเรียนรู้ผ่านผลการสะท้อนกลับในรูปของรางวัล **(Reward)** หรือบทลงโทษเชิงคะแนนลบ
+            </p>
+
+            <div class="border border-slate-200 rounded-xl p-6 bg-slate-50 flex flex-col items-center mb-6">
+                <span class="text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded mb-4">วงจรการปฏิสัมพันธ์ใน RL (RL Loop)</span>
+                <!-- Text-based ASCII visual representation of RL Loop -->
+                <div class="font-mono text-sm text-slate-700 bg-slate-100 p-4 rounded-lg shadow-inner w-full max-w-md text-center space-y-2">
+                    <div>[ Agent (ตัวแทน) ]</div>
+                    <div>&nbsp; &nbsp; &nbsp; │ &nbsp; Action (กระทำ)</div>
+                    <div>&nbsp; &nbsp; &nbsp; ▼</div>
+                    <div>[ Environment (สภาพแวดล้อม) ]</div>
+                    <div>&nbsp; &nbsp; &nbsp; │ &nbsp; Reward (รางวัล) / New State (สถานะใหม่)</div>
+                    <div>&nbsp; &nbsp; &nbsp; └────────────────────────► (กลับไปที่ Agent)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: MDP -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-emerald-800 mb-4 border-b-2 border-emerald-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 font-semibold text-lg">2</span>
+                กระบวนการตัดสินใจแบบมาร์คอฟ (Markov Decision Process หรือ MDP)
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                ปัญหาใน Reinforcement Learning ส่วนมากจะถูกจำลองให้อยู่ภายใต้กรอบของ **MDP** ซึ่งเป็นโมเดลคณิตศาสตร์สำหรับระบุสภาพแวดล้อม โดยประกอบด้วยองค์ประกอบ:
+            </p>
+            <ul class="list-disc pl-6 text-slate-600 space-y-2 mb-6 text-sm">
+                <li><strong>$S$ (State):</strong> เซตของสถานะที่เป็นไปได้ทั้งหมดในสภาพแวดล้อม</li>
+                <li><strong>$A$ (Action):</strong> เซตของการตัดสินใจทำกิจกรรมที่ Agent สามารถทำได้</li>
+                <li><strong>$T(s, a, s')$ (Transition Probability):</strong> โอกาสที่จะเปลี่ยนจากสถานะ $s$ ไปยัง $s'$ เมื่อตัดสินใจทำ $a$</li>
+                <li><strong>$R(s, a, s')$ (Reward):</strong> ค่าคะแนนผลตอบแทนที่ได้รับ</li>
+                <li><strong>$\gamma$ (Discount Factor):</strong> ตัวคูณลดทอนคุณค่าของรางวัลในอนาคต (มีค่าระหว่าง 0 ถึง 1) เพื่อประเมินน้ำหนักรางวัลในปัจจุบันให้สูงกว่าการรอคอยในอนาคต</li>
+            </ul>
+        </section>
+
+        <!-- Section 3: Q-Learning -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 mb-8">
+            <h2 class="text-2xl font-bold text-emerald-800 mb-4 border-b-2 border-emerald-100 pb-2 flex items-center">
+                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 font-semibold text-lg">3</span>
+                ขั้นตอนวิธี Q-Learning
+            </h2>
+            <p class="text-slate-600 leading-relaxed mb-4">
+                **Q-Learning** เป็นอัลกอริทึมประเภท **Model-Free Reinforcement Learning** ที่มุ่งคำนวณและประเมินค่าฟังก์ชันความคุ้มค่าของการกระทำที่เรียกว่า **Q-Value ($Q(s, a)$)** โดยจะจัดเก็บไว้ในตาราง **Q-Table** เพื่อระบุว่าในสถานะ $s$ ใด ๆ การเลือกทำ $a$ จะคุ้มค่าที่สุดในระยะยาว
+            </p>
+
+            <h3 class="font-bold text-slate-800 text-lg mt-6 mb-2">สมการการอัปเดตค่า Q-Value (Q-Table Update)</h3>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex justify-center items-center my-4 font-mono text-lg overflow-x-auto">
+                $$Q(s, a) \leftarrow Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right)$$
+            </div>
+            <div class="text-slate-600 text-sm space-y-2 mt-4">
+                <p>ความหมายของสัญลักษณ์:</p>
+                <ul class="list-disc pl-6 space-y-1">
+                    <li><strong>$\alpha$ (Learning Rate):</strong> อัตราการเรียนรู้เพื่อเปลี่ยนค่าเดิม</li>
+                    <li><strong>$r$:</strong> รางวัลที่ได้รับทันทีในตานั้น</li>
+                    <li><strong>$\max_{a'} Q(s', a')$:</strong> ค่าประเมินสถานการณ์ Q-Value ที่ดีที่สุดในอนาคตเมื่อเข้าสู่สถานะใหม่ $s'$</li>
+                </ul>
+            </div>
+
+            <!-- Interactive Q-learning Visualizer -->
+            <div class="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-2xl">
+                <h3 class="font-bold text-emerald-900 text-lg mb-4 text-center">🤖 เครื่องจำลองการเรียนรู้ Q-Learning Gridworld</h3>
+                <p class="text-slate-600 text-sm text-center mb-6">กดปุ่ม Train เพื่อให้หุ่นยนต์ทดลองค้นหาเส้นทางหลบหลีกกองไฟ (🔥) ไปหาของรางวัล (🏆) และสังเกตตัวเลขทิศทาง Q-value ที่ปรับตามสมการเบลล์แมน</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    <!-- Controls -->
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-xs space-y-2">
+                            <div><span class="font-semibold text-slate-700">รอบการเรียนรู้ (Episodes):</span> <span id="episodes-count" class="font-bold text-emerald-600 text-sm">0</span></div>
+                            <div><span class="font-semibold text-slate-700">การกระทำล่าสุด (Action):</span> <span id="last-action" class="font-mono text-slate-800">-</span></div>
+                            <div><span class="font-semibold text-slate-700">รางวัลล่าสุด (Reward):</span> <span id="last-reward" class="font-mono text-slate-800">-</span></div>
+                        </div>
+
+                        <div class="flex flex-col space-y-2">
+                            <button id="step-train-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                                ฝึก 1 ตอน (Train 1 Episode)
+                            </button>
+                            <button id="fast-train-btn" class="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                                ฝึกด่วน 50 ตอน (Train 50 Episodes)
+                            </button>
+                            <button id="test-agent-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                                ทดสอบเอเจนต์ (Test Run)
+                            </button>
+                            <button id="reset-q-btn" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-4 rounded-lg text-sm transition">
+                                รีเซต Q-Table
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Grid World Area -->
+                    <div class="md:col-span-2 flex justify-center">
+                        <div id="grid-container" class="grid grid-cols-4 gap-2 bg-slate-200 p-3 rounded-2xl w-full max-w-[320px]">
+                            <!-- 16 Cells will be rendered here dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const gridContainer = document.getElementById("grid-container");
+                    const episodesCount = document.getElementById("episodes-count");
+                    const lastAction = document.getElementById("last-action");
+                    const lastReward = document.getElementById("last-reward");
+                    const stepTrainBtn = document.getElementById("step-train-btn");
+                    const fastTrainBtn = document.getElementById("fast-train-btn");
+                    const testAgentBtn = document.getElementById("test-agent-btn");
+                    const resetQBtn = document.getElementById("reset-q-btn");
+
+                    const gridSize = 4;
+                    // Actions: 0=Up, 1=Right, 2=Down, 3=Left
+                    const actionNames = ["ขึ้น (Up)", "ขวา (Right)", "ลง (Down)", "ซ้าย (Left)"];
+                    
+                    // Grid types: 'empty', 'start', 'goal', 'obstacle'
+                    const gridTypes = [
+                        'empty', 'empty', 'empty', 'goal',
+                        'empty', 'obstacle', 'empty', 'obstacle',
+                        'empty', 'empty', 'empty', 'empty',
+                        'start', 'empty', 'empty', 'empty'
+                    ];
+
+                    const rewards = [
+                        -1, -1, -1, 100, // Goal is +100
+                        -1, -100, -1, -100, // Obstacles are -100
+                        -1, -1, -1, -1,
+                        -1, -1, -1, -1
+                    ];
+
+                    // Q-Table initialization (16 states x 4 actions)
+                    let Q = Array(16).fill(null).map(() => [0, 0, 0, 0]);
+                    let episodes = 0;
+                    let agentPos = 12; // Start position (row=3, col=0)
+                    let isTesting = false;
+
+                    const alpha = 0.2; // Learning rate
+                    const gamma = 0.9; // Discount factor
+                    let epsilon = 0.3; // Exploration rate
+
+                    function resetAgent() {
+                        agentPos = 12;
+                    }
+
+                    function getCoordinates(state) {
+                        return { r: Math.floor(state/gridSize), c: state % gridSize };
+                    }
+
+                    function getState(r, c) {
+                        return r * gridSize + c;
+                    }
+
+                    function getNextState(state, action) {
+                        const { r, c } = getCoordinates(state);
+                        let nextR = r;
+                        let nextC = c;
+                        if (action === 0 && r > 0) nextR--;
+                        if (action === 1 && c < 3) nextC++;
+                        if (action === 2 && r < 3) nextR++;
+                        if (action === 3 && c > 0) nextC--;
+                        return getState(nextR, nextC);
+                    }
+
+                    function chooseAction(state, exploit = false) {
+                        if (!exploit && Math.random() < epsilon) {
+                            return Math.floor(Math.random() * 4); // Explore
+                        }
+                        // Exploit
+                        const qVals = Q[state];
+                        let maxVal = Math.max(...qVals);
+                        let bestActions = [];
+                        for(let i=0; i<4; i++) {
+                            if(qVals[i] === maxVal) bestActions.push(i);
+                        }
+                        return bestActions[Math.floor(Math.random() * bestActions.length)];
+                    }
+
+                    function trainStep() {
+                        let state = agentPos;
+                        if (gridTypes[state] === 'goal' || gridTypes[state] === 'obstacle') {
+                            resetAgent();
+                            state = agentPos;
+                        }
+
+                        const action = chooseAction(state);
+                        const nextState = getNextState(state, action);
+                        const r = rewards[nextState];
+
+                        // Bellman equation Q-update
+                        const maxNextQ = Math.max(...Q[nextState]);
+                        Q[state][action] = Q[state][action] + alpha * (r + gamma * maxNextQ - Q[state][action]);
+
+                        lastAction.textContent = actionNames[action];
+                        lastReward.textContent = r;
+
+                        agentPos = nextState;
+                    }
+
+                    function runEpisode() {
+                        resetAgent();
+                        let steps = 0;
+                        while(steps < 100) {
+                            let state = agentPos;
+                            if (gridTypes[state] === 'goal' || gridTypes[state] === 'obstacle') break;
+                            trainStep();
+                            steps++;
+                        }
+                        episodes++;
+                        episodesCount.textContent = episodes;
+                    }
+
+                    function renderGrid() {
+                        gridContainer.innerHTML = '';
+                        for(let s=0; s<16; s++) {
+                            const { r, c } = getCoordinates(s);
+                            const cell = document.createElement("div");
+                            cell.className = "relative bg-white aspect-square rounded-xl border border-slate-300 flex flex-col justify-center items-center font-bold text-lg select-none shadow-sm transition-all duration-200";
+                            
+                            // Visual color based on Q-values
+                            const maxQ = Math.max(...Q[s]);
+                            if (maxQ > 0) {
+                                const intensity = Math.min(Math.floor(maxQ * 1.5), 100);
+                                cell.style.backgroundColor = `rgba(16, 185, 129, ${intensity / 200})`; // Green tint
+                            } else if (maxQ < 0) {
+                                const intensity = Math.min(Math.floor(Math.abs(maxQ) * 1.5), 100);
+                                cell.style.backgroundColor = `rgba(239, 68, 68, ${intensity / 200})`; // Red tint
+                            }
+
+                            // Render text / Emoji
+                            if (agentPos === s) {
+                                cell.textContent = "🤖";
+                                cell.classList.add("ring-4", "ring-indigo-500", "scale-105");
+                            } else if (gridTypes[s] === 'goal') {
+                                cell.textContent = "🏆";
+                                cell.classList.add("bg-yellow-50");
+                            } else if (gridTypes[s] === 'obstacle') {
+                                cell.textContent = "🔥";
+                                cell.classList.add("bg-red-50");
+                            }
+
+                            // Show Q-value directions subtly on hover or small font
+                            const qText = document.createElement("span");
+                            qText.className = "absolute bottom-1 text-[7px] text-slate-400 font-mono";
+                            const cleanQ = Q[s].map(v => Math.round(v));
+                            qText.textContent = `▲${cleanQ[0]} ▶${cleanQ[1]} ▼${cleanQ[2]} ◀${cleanQ[3]}`;
+                            cell.appendChild(qText);
+
+                            gridContainer.appendChild(cell);
+                        }
+                    }
+
+                    stepTrainBtn.addEventListener("click", function() {
+                        if (isTesting) return;
+                        runEpisode();
+                        renderGrid();
+                    });
+
+                    fastTrainBtn.addEventListener("click", function() {
+                        if (isTesting) return;
+                        for(let i=0; i<50; i++) {
+                            runEpisode();
+                        }
+                        renderGrid();
+                    });
+
+                    testAgentBtn.addEventListener("click", function() {
+                        if (isTesting) return;
+                        isTesting = true;
+                        resetAgent();
+                        renderGrid();
+
+                        const interval = setInterval(() => {
+                            let state = agentPos;
+                            if (gridTypes[state] === 'goal' || gridTypes[state] === 'obstacle') {
+                                clearInterval(interval);
+                                isTesting = false;
+                                return;
+                            }
+                            // Exploit
+                            const action = chooseAction(state, true);
+                            agentPos = getNextState(state, action);
+                            renderGrid();
+                        }, 500);
+                    });
+
+                    resetQBtn.addEventListener("click", function() {
+                        Q = Array(16).fill(null).map(() => [0, 0, 0, 0]);
+                        episodes = 0;
+                        episodesCount.textContent = 0;
+                        resetAgent();
+                        renderGrid();
+                    });
+
+                    renderGrid();
+                });
+            </script>
+        </section>
+
+    
+                <!-- Section: Practical Lab -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl shadow-xl p-6 md:p-8 mb-8 border border-slate-700 mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex-1">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-400 bg-sky-955/50 px-3 py-1 rounded-full border border-sky-800/30">ใบงานปฏิบัติการ (Practical Lab)</span>
+                    <h3 class="text-xl font-bold mt-2">ทดลองลงมือทำด้วย Jupyter Notebook</h3>
+                    <p class="text-slate-300 text-sm mt-2 font-semibold text-sky-200">ไฟล์แล็บ: <code class="bg-slate-900 px-2 py-0.5 rounded text-yellow-300 font-mono text-xs">18_reinforcement_learning.ipynb</code></p>
+                    <p class="text-slate-400 text-xs mt-1 leading-relaxed">ลงมือพัฒนา Agent เพื่อเรียนรู้สิ่งแวดล้อมผ่านรางวัลและบทลงโทษในกระบวนการ Markov Decision Process (MDP) และ Q-Learning</p>
+                </div>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <a href="https://github.com/anusornc/handson-ml3/blob/main/18_reinforcement_learning.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-lg border border-slate-600 transition shadow-sm">
+                        <span>ดูบน GitHub</span>
+                    </a>
+                    <a href="https://colab.research.google.com/github/anusornc/handson-ml3/blob/main/18_reinforcement_learning.ipynb" target="_blank" rel="noopener" class="inline-flex items-center space-x-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition shadow-sm">
+                        <span>เปิดใน Google Colab 🚀</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12 text-center text-sm">
+        <p>&copy; 2023 ML Learn by Anusorn Chaikaew</p>
+    </footer>
+
+</body>
+</html>
